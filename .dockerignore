@@ -1,0 +1,9 @@
+# Entorno local, datos generados y salidas de prueba: fuera del contexto de build.
+.venv
+data
+tests/out
+frontend/dev
+**/__pycache__
+**/.pytest_cache
+.git
+.DS_Store

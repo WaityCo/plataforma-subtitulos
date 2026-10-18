@@ -1,0 +1,105 @@
+{
+  "_nota": "Léxico del énfasis por significado (preset ken_remedie, emphasis_engine lexicon). Cada categoría tiene un peso de 1 a 10: una palabra o compuesto de esa categoría puntúa con ese peso. Para ampliar: añade la palabra en minúsculas a 'palabras' (es o en) o un compuesto de DOS palabras a 'compuestos'; se normalizan mayúsculas, tildes y puntuación de los extremos. Crear una categoría nueva es añadir otro objeto con 'peso', 'palabras' y 'compuestos'. Reglas fijas del motor, no del léxico: las stopwords de presets/stopwords.json, los artículos, pronombres y auxiliares, y las contracciones con apóstrofe nunca se enfatizan. Los números cuentan como 'cantidad'. Una palabra entre comillas puntúa con 'peso_comillas' (la palabra clave del CTA, como \"TEA\"). Si una palabra aparece en varias categorías, gana el peso mayor. Un compuesto puntúa con el peso de su categoría; si empata con una palabra suelta, gana la palabra.",
+  "peso_comillas": 3,
+  "categorias": {
+    "cuerpo": {
+      "peso": 3,
+      "palabras": {
+        "en": ["gut", "lining", "liver", "chin", "tissue", "tissues", "vessels", "stomach", "intestines", "intestine", "colon", "skin", "blood", "heart", "kidneys", "kidney", "brain", "lungs", "belly", "face", "hair", "feet", "thighs", "joints", "bones", "mouth", "throat", "eyes", "hands", "legs", "waist", "hips", "bladder", "cells", "muscles", "nerves", "organs", "abdomen", "bowels", "bloodstream"],
+        "es": ["intestino", "intestinos", "estómago", "hígado", "barriga", "piel", "sangre", "vasos", "tejido", "tejidos", "mentón", "barbilla", "pecho", "corazón", "riñones", "riñón", "cerebro", "pulmones", "colon", "cara", "cabello", "pies", "piernas", "muslos", "articulaciones", "huesos", "boca", "garganta", "ojos", "manos", "cintura", "caderas", "vejiga", "células", "músculos", "nervios", "órganos", "abdomen", "vientre"]
+      },
+      "compuestos": {
+        "en": ["blood flow", "good bacteria", "gut health"],
+        "es": ["flujo sanguíneo", "buenas bacterias", "salud intestinal"]
+      }
+    },
+    "generico": {
+      "peso": 2,
+      "palabras": {
+        "en": ["body"],
+        "es": ["cuerpo"]
+      },
+      "compuestos": {
+        "en": [],
+        "es": []
+      }
+    },
+    "sintoma": {
+      "peso": 3,
+      "palabras": {
+        "en": ["backed-up", "inflammation", "dryness", "digestion", "weight", "clogging", "imbalance", "metabolism", "bloating", "gas", "constipation", "fatigue", "pain", "acidity", "reflux", "infection", "sugar", "cholesterol", "swelling", "cramps", "headache", "insomnia", "diarrhea", "nausea", "toxins", "stiffness", "energy", "symptoms", "damage", "disease"],
+        "es": ["inflamación", "sequedad", "digestión", "peso", "metabolismo", "hinchazón", "estreñimiento", "gases", "cansancio", "fatiga", "dolor", "acidez", "reflujo", "infección", "azúcar", "colesterol", "calambres", "insomnio", "diarrea", "náuseas", "toxinas", "rigidez", "daño", "enfermedad", "síntomas", "energía", "pesadez"]
+      },
+      "compuestos": {
+        "en": [],
+        "es": ["salud digestiva"]
+      }
+    },
+    "ingrediente": {
+      "peso": 3,
+      "palabras": {
+        "en": ["lemon", "chia", "turmeric", "pepper", "cinnamon", "himalayan", "dates", "date", "brownies", "ginger", "garlic", "honey", "oats", "oatmeal", "flaxseed", "flax", "yogurt", "kefir", "coconut", "banana", "apple", "tea", "coffee", "salt", "aloe", "mint", "cucumber", "avocado", "almonds", "walnuts", "berries", "raspberries", "spinach", "kale", "beets", "cayenne", "clove", "fennel", "chamomile", "lime", "orange", "vinegar", "cider", "seeds", "oil", "butter"],
+        "es": ["limón", "chía", "cúrcuma", "pimienta", "canela", "himalaya", "dátiles", "dátil", "brownies", "jengibre", "ajo", "miel", "avena", "linaza", "yogur", "kéfir", "coco", "plátano", "manzana", "té", "café", "sal", "aloe", "menta", "pepino", "aguacate", "almendras", "nueces", "bayas", "frambuesas", "espinaca", "remolacha", "clavo", "hinojo", "manzanilla", "lima", "naranja", "vinagre", "sidra", "semillas", "aceite", "mantequilla"]
+      },
+      "compuestos": {
+        "en": ["chia seed", "apple cider", "black pepper", "baking soda", "olive oil", "healing drink"],
+        "es": ["semillas chía", "bebida curativa", "aceite oliva", "pimienta negra", "bicarbonato sódico"]
+      }
+    },
+    "objeto": {
+      "peso": 2,
+      "palabras": {
+        "en": ["socks", "jeans", "pants", "shirt", "waistband", "elastic", "shoes", "clothes", "bowl", "glass", "cup", "pot", "jar", "bottle", "spoon", "knife", "blender", "pan", "towel", "mattress", "pillow", "bed"],
+        "es": ["calcetines", "pantalones", "camisa", "elástico", "zapatos", "ropa", "tazón", "taza", "olla", "frasco", "botella", "cuchara", "cuchillo", "licuadora", "sartén", "toalla", "colchón", "almohada", "cama", "vaso"]
+      },
+      "compuestos": {
+        "en": [],
+        "es": []
+      }
+    },
+    "cta": {
+      "peso": 3,
+      "palabras": {
+        "en": ["link", "bio", "comment", "comments", "dm", "dms", "book", "following", "follow", "guide", "protocol", "protocols", "program", "free", "download", "subscribe", "save", "join", "course", "ebook", "access", "message"],
+        "es": ["enlace", "bio", "comentario", "comentarios", "mensaje", "mensajes", "libro", "siguiendo", "seguir", "sigue", "guía", "protocolo", "programa", "gratis", "descarga", "suscríbete", "guarda", "únete", "curso", "acceso"]
+      },
+      "compuestos": {
+        "en": ["social media", "health protocols", "free guide", "free download", "full guide"],
+        "es": ["redes sociales", "protocolos saludables", "guía completa"]
+      }
+    },
+    "adjetivo": {
+      "peso": 2,
+      "palabras": {
+        "en": ["fresh", "full", "directly", "recurring", "unpleasant", "simply", "complete", "completely", "instantly", "truly", "really", "totally", "powerful", "natural", "ancient", "simple", "easy", "perfect", "best", "real", "incredible", "amazing", "deep", "massive", "ultimate", "gentle", "bloated"],
+        "es": ["fresco", "fresca", "completo", "completa", "directamente", "recurrente", "desagradable", "simplemente", "instantáneamente", "verdaderamente", "realmente", "totalmente", "poderoso", "natural", "antiguo", "simple", "fácil", "perfecto", "mejor", "real", "increíble", "profundo", "enorme", "último", "suave"]
+      },
+      "compuestos": {
+        "en": [],
+        "es": []
+      }
+    },
+    "verbo": {
+      "peso": 1,
+      "palabras": {
+        "en": ["drop", "strain", "bake", "take", "squeeze", "boil", "mix", "blend", "soak", "steep", "chop", "grind", "add", "pour", "drink", "sip", "apply", "massage", "stir", "simmer", "heat", "cook", "wash", "rinse", "chew", "eat", "swallow", "slice", "peel", "grate", "freeze"],
+        "es": ["añade", "agrega", "exprime", "hierve", "cuela", "mezcla", "licúa", "remoja", "bebe", "toma", "vierte", "tritura", "corta", "calienta", "aplica", "masajea", "revuelve", "cocina", "lava", "enjuaga", "mastica", "come", "traga", "rebana", "pela", "ralla", "congela"]
+      },
+      "compuestos": {
+        "en": [],
+        "es": []
+      }
+    },
+    "cantidad": {
+      "peso": 1,
+      "palabras": {
+        "en": ["minute", "minutes", "hour", "hours", "day", "days", "week", "weeks", "month", "months", "year", "years", "second", "seconds", "pinch", "teaspoon", "teaspoons", "tablespoon", "tablespoons", "cup", "cups", "daily", "weekly", "monthly", "nightly", "twice", "once", "ten", "twenty", "thirty", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "hundred", "half", "morning", "night"],
+        "es": ["minuto", "minutos", "hora", "horas", "día", "días", "semana", "semanas", "mes", "meses", "año", "años", "segundo", "segundos", "pizca", "cucharadita", "cucharaditas", "cucharada", "cucharadas", "taza", "tazas", "diario", "semanal", "mensual", "diez", "veinte", "treinta", "media", "mañana", "noche"]
+      },
+      "compuestos": {
+        "en": [],
+        "es": []
+      }
+    }
+  }
+}

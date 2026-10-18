@@ -1,0 +1,164 @@
+{
+ "model": "small",
+ "language": "en",
+ "clip": "clip84",
+ "offset": 84.0,
+ "duration": 9.0,
+ "words": [
+  {
+   "text": "T",
+   "start": 0.0,
+   "end": 0.28
+  },
+  {
+   "text": "and",
+   "start": 0.28,
+   "end": 0.7
+  },
+  {
+   "text": "I'll",
+   "start": 0.7,
+   "end": 0.82
+  },
+  {
+   "text": "send",
+   "start": 0.82,
+   "end": 1.02
+  },
+  {
+   "text": "you",
+   "start": 1.02,
+   "end": 1.18
+  },
+  {
+   "text": "the",
+   "start": 1.18,
+   "end": 1.3
+  },
+  {
+   "text": "full",
+   "start": 1.3,
+   "end": 1.54
+  },
+  {
+   "text": "book",
+   "start": 1.54,
+   "end": 1.86
+  },
+  {
+   "text": "and",
+   "start": 1.86,
+   "end": 2.12
+  },
+  {
+   "text": "all",
+   "start": 2.12,
+   "end": 2.34
+  },
+  {
+   "text": "my",
+   "start": 2.34,
+   "end": 2.5
+  },
+  {
+   "text": "health",
+   "start": 2.5,
+   "end": 2.68
+  },
+  {
+   "text": "protocols",
+   "start": 2.68,
+   "end": 3.2
+  },
+  {
+   "text": "straight",
+   "start": 3.2,
+   "end": 3.66
+  },
+  {
+   "text": "to",
+   "start": 3.66,
+   "end": 3.88
+  },
+  {
+   "text": "your",
+   "start": 3.88,
+   "end": 3.96
+  },
+  {
+   "text": "DMs.",
+   "start": 3.96,
+   "end": 4.52
+  },
+  {
+   "text": "Just",
+   "start": 4.56,
+   "end": 4.74
+  },
+  {
+   "text": "make",
+   "start": 4.74,
+   "end": 4.92
+  },
+  {
+   "text": "sure",
+   "start": 4.92,
+   "end": 5.12
+  },
+  {
+   "text": "you're",
+   "start": 5.12,
+   "end": 5.28
+  },
+  {
+   "text": "following",
+   "start": 5.28,
+   "end": 5.64
+  },
+  {
+   "text": "me",
+   "start": 5.64,
+   "end": 5.94
+  },
+  {
+   "text": "first,",
+   "start": 5.94,
+   "end": 6.3
+  },
+  {
+   "text": "otherwise",
+   "start": 6.56,
+   "end": 6.9
+  },
+  {
+   "text": "social",
+   "start": 6.9,
+   "end": 7.34
+  },
+  {
+   "text": "media",
+   "start": 7.34,
+   "end": 7.76
+  },
+  {
+   "text": "won't",
+   "start": 7.76,
+   "end": 8.36
+  },
+  {
+   "text": "let",
+   "start": 8.36,
+   "end": 8.52
+  },
+  {
+   "text": "my",
+   "start": 8.52,
+   "end": 8.7
+  },
+  {
+   "text": "message",
+   "start": 8.7,
+   "end": 8.98
+  }
+ ]
+}

@@ -1,0 +1,12 @@
+# Cloudflare Pages. index.html y config.js se revalidan en cada visita. css y js llevan ?v= en su URL (index.html), así que
+# pueden durar un año: al cambiar un archivo de css/ o js/, sube la versión en index.html (?v= y importmap).
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/config.js
+  Cache-Control: no-cache
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+/js/*
+  Cache-Control: public, max-age=31536000, immutable

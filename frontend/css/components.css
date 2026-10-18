@@ -1,0 +1,759 @@
+/* Click-Flow Design System v6, adaptado a Subtítulos · componentes.
+   Cargar después de tokens.css. Cada componente trae sus estados.
+   Ningún box-shadow proyecta: solo anillos (0 0 0 Npx) e insets. Sentence case: ninguna clase transforma el texto. */
+
+/* ---------- Botón ----------
+   36 por defecto; 28 en filas, 32 en cards, 40 para la acción de página.
+   El relleno es el único bisel: gradiente, y en el ink, dos anillos inset. */
+.cf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cf-space-2);
+  height: var(--cf-control-h);
+  padding: 0 var(--cf-space-4);
+  border: 0;
+  border-radius: var(--cf-radius-control);
+  background: var(--cf-color-surface);
+  color: var(--cf-color-ink);
+  font: 500 var(--cf-text-body) / 18px var(--cf-font-sans);
+  letter-spacing: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+}
+.cf-btn svg { flex: 0 0 auto; width: 18px; height: 18px; }
+.cf-btn--28 { height: 28px; padding: 0 var(--cf-space-3); }
+.cf-btn--32 { height: 32px; padding: 0 var(--cf-space-3); }
+.cf-btn--40 { height: 40px; padding: 0 var(--cf-space-5); }
+
+/* Foco visible para todo botón. Las variantes de abajo lo afinan con su propio anillo. */
+.cf-btn:focus-visible { box-shadow: var(--cf-ring-focus); }
+
+/* Ink: primario, cuando crea algo o gasta */
+.cf-btn--ink { background: var(--cf-grad-ink); color: var(--cf-color-ink-inverse); box-shadow: var(--cf-bevel-ink); }
+.cf-btn--ink:hover,
+.cf-btn--ink.is-hover { background: var(--cf-grad-ink-hover); box-shadow: var(--cf-bevel-ink-hover); }
+.cf-btn--ink:active,
+.cf-btn--ink.is-pressed { background: var(--cf-color-ink-pressed); box-shadow: var(--cf-bevel-ink-pressed); }
+.cf-btn--ink:focus-visible,
+.cf-btn--ink.is-focus { box-shadow: var(--cf-bevel-ink), var(--cf-ring-focus); }
+
+/* Blanco: secundario, cuando solo navega. Hover y pressed no están medidos en Paper. */
+.cf-btn--white { background: var(--cf-color-surface); color: var(--cf-color-ink); box-shadow: var(--cf-ring-control); }
+.cf-btn--white:hover,
+.cf-btn--white.is-hover { background: var(--cf-color-surface-hover); }
+.cf-btn--white:active,
+.cf-btn--white.is-pressed { background: var(--cf-color-border); }
+.cf-btn--white:focus-visible,
+.cf-btn--white.is-focus { box-shadow: var(--cf-ring-control), var(--cf-ring-focus); }
+
+/* Ghost: acción de texto, como Skip */
+.cf-btn--ghost { background: transparent; color: var(--cf-color-ink-soft); }
+.cf-btn--ghost:hover,
+.cf-btn--ghost.is-hover { background: var(--cf-color-surface-hover); }
+.cf-btn--ghost:active,
+.cf-btn--ghost.is-pressed { background: var(--cf-color-border); }
+.cf-btn--ghost:focus-visible,
+.cf-btn--ghost.is-focus { box-shadow: var(--cf-ring-focus); }
+
+/* Saving: spinner antes del texto; el botón conserva su color */
+.cf-btn.is-saving { cursor: progress; }
+.cf-btn.is-saving::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--cf-radius-pill);
+  animation: cf-spin 0.8s linear infinite;
+}
+
+/* Disabled va al final para ganar a hover y focus */
+.cf-btn:disabled,
+.cf-btn[aria-disabled="true"] {
+  background: var(--cf-color-surface-hover);
+  color: var(--cf-color-ink-faint);
+  box-shadow: none;
+  cursor: default;
+}
+
+@keyframes cf-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Icon tile ----------
+   32 de tamaño, radio 8, gradiente del pigmento con bisel. El color nombra la categoría. */
+.cf-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--cf-radius-tile);
+  color: var(--cf-color-ink-inverse);
+  box-shadow: var(--cf-bevel-tile);
+}
+.cf-tile svg { width: 18px; height: 18px; }
+.cf-tile--1 { background: var(--cf-grad-data-1); }
+.cf-tile--2 { background: var(--cf-grad-data-2); }
+.cf-tile--3 { background: var(--cf-grad-data-3); }
+.cf-tile--4 { background: var(--cf-grad-data-4); }
+.cf-tile--5 { background: var(--cf-grad-data-5); }
+.cf-tile--6 { background: var(--cf-grad-data-6); }
+.cf-tile--7 { background: var(--cf-grad-data-7); }
+.cf-tile--8 { background: var(--cf-grad-data-8); }
+.cf-tile--neutral { background: var(--cf-grad-neutral-tile); }
+/* Dentro de una celda del rail: blanco con borde de 1px, sin color */
+.cf-tile--white { background: var(--cf-color-surface); color: var(--cf-color-ink-soft); box-shadow: inset 0 0 0 1px var(--cf-color-border); }
+
+/* ---------- Chip, contador, punto de estado, delta ---------- */
+
+/* Chip: 24 de alto, radio 8, 13/500. Relleno sunken o contorno blanco. */
+.cf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cf-space-1);
+  height: 24px;
+  padding: 0 var(--cf-space-2);
+  border-radius: var(--cf-radius-sm);
+  background: var(--cf-color-surface-sunken);
+  color: var(--cf-color-ink-soft);
+  font: 500 var(--cf-text-label) / 16px var(--cf-font-sans);
+  white-space: nowrap;
+}
+.cf-chip--outline {
+  background: var(--cf-color-surface);
+  color: var(--cf-color-ink-muted);
+  font-weight: 400;
+  box-shadow: var(--cf-ring-border);
+}
+
+/* Contador: squircle de radio 6, 12/500 */
+.cf-counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 var(--cf-space-1);
+  border-radius: var(--cf-radius-xs);
+  background: var(--cf-color-surface-sunken);
+  color: var(--cf-color-ink-soft);
+  font: 500 var(--cf-text-micro) / 16px var(--cf-font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Punto de estado: 8, plano con el bisel de punto. Va seguido de texto. */
+.cf-dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--cf-radius-pill);
+  background: var(--cf-color-ink-faint);
+  box-shadow: var(--cf-bevel-dot);
+}
+.cf-dot--success { background: var(--cf-success); }
+.cf-dot--warning { background: var(--cf-warning); }
+.cf-dot--danger { background: var(--cf-danger); }
+.cf-dot--info { background: var(--cf-info); }
+
+.cf-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cf-space-2);
+  color: var(--cf-color-ink-soft);
+  font: 400 var(--cf-text-body) / 18px var(--cf-font-sans);
+}
+
+/* Leyenda: pill de 26 con borde de 1px. Seleccionada: chip ink, nunca color de fondo. */
+.cf-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cf-space-2);
+  height: 26px;
+  padding: 0 var(--cf-space-3);
+  border-radius: var(--cf-radius-pill);
+  background: var(--cf-color-surface);
+  box-shadow: var(--cf-ring-border);
+  color: var(--cf-color-ink-soft);
+  font: 400 var(--cf-text-label) / 16px var(--cf-font-sans);
+}
+.cf-legend[aria-pressed="true"] { background: var(--cf-grad-ink); color: var(--cf-color-ink-inverse); box-shadow: var(--cf-bevel-ink); }
+
+/* Delta: círculo sólido de 12 con flecha blanca rellena. El color sigue a lo que es bueno. */
+.cf-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cf-space-2);
+  color: var(--cf-success);
+  font: 500 var(--cf-text-body) / 18px var(--cf-font-sans);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cf-delta__glyph {
+  position: relative;
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--cf-radius-pill);
+  background: var(--cf-grad-success);
+}
+.cf-delta__glyph::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.9);
+  clip-path: polygon(50% 0, 100% 50%, 70% 50%, 70% 100%, 30% 100%, 30% 50%, 0 50%);
+}
+.cf-delta--down { color: var(--cf-danger); }
+.cf-delta--down .cf-delta__glyph { background: var(--cf-grad-danger); }
+.cf-delta--down .cf-delta__glyph::after { transform: translate(-50%, -50%) rotate(180deg); }
+.cf-delta--flat { color: var(--cf-color-ink-soft); font-weight: 400; }
+.cf-delta--flat .cf-delta__glyph { background: var(--cf-grad-neutral); }
+.cf-delta--flat .cf-delta__glyph::after { width: 6px; height: 2px; clip-path: none; }
+
+/* ---------- KPI card ----------
+   Header 62, hairline de 1px de borde a borde, body 90 con padding 15 18.
+   Título 16/20/500 y métrica 30/36/500 medidos en el DOM de Paper. */
+.cf-kpi {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--cf-radius-card);
+  background: var(--cf-color-surface);
+}
+.cf-kpi__head {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 62px;
+  padding: 0 18px;
+  min-width: 0;
+}
+.cf-kpi__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--cf-color-ink);
+  font: 500 var(--cf-text-card) / 20px var(--cf-font-sans);
+  letter-spacing: var(--cf-track-card);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cf-kpi__rule { height: 1px; background: var(--cf-color-hairline); }
+.cf-kpi__body {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cf-space-2);
+  height: 90px;
+  padding: 15px 18px;
+}
+.cf-kpi__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cf-space-3);
+  height: 36px;
+}
+.cf-kpi__metric {
+  margin: 0;
+  color: var(--cf-color-ink);
+  font: 500 var(--cf-text-metric) / var(--cf-lh-metric) var(--cf-font-sans);
+  letter-spacing: var(--cf-track-metric);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cf-kpi__metric.is-empty { color: var(--cf-color-ink-faint); }
+.cf-kpi__caption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cf-color-ink-muted);
+  font: 400 var(--cf-text-micro) / var(--cf-lh-micro) var(--cf-font-sans);
+}
+
+/* Anuncio: tarjeta de 264, banda a sangre, texto de 12 muted, dos acciones */
+.cf-announce {
+  width: 264px;
+  overflow: hidden;
+  border-radius: var(--cf-radius-card);
+  background: var(--cf-color-surface);
+}
+.cf-announce__band {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 104px;
+  background: var(--cf-color-surface-sunken);
+}
+.cf-announce__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cf-space-2);
+  padding: var(--cf-space-3) 10px 14px;
+}
+.cf-announce__title {
+  margin: 14px 0 0;
+  color: var(--cf-color-ink);
+  font: 600 var(--cf-text-ui) / 20px var(--cf-font-sans);
+  letter-spacing: -0.01em;
+}
+.cf-announce__text {
+  margin: 0;
+  color: var(--cf-color-ink-muted);
+  font: 400 var(--cf-text-micro) / var(--cf-lh-micro) var(--cf-font-sans);
+}
+.cf-announce__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--cf-space-2);
+  margin-top: var(--cf-space-2);
+}
+.cf-announce__count {
+  flex: 1 1 auto;
+  color: var(--cf-color-ink-muted);
+  font: 400 var(--cf-text-micro) / var(--cf-lh-micro) var(--cf-font-sans);
+}
+
+/* ---------- Card, panel y control ---------- */
+
+/* Card sobre el canvas: blanca, radio 12, sin borde ni sombra */
+.cf-card {
+  min-width: 0;
+  border-radius: var(--cf-radius-card);
+  background: var(--cf-color-surface);
+}
+.cf-card--chart { padding: 14px; }
+
+/* Panel contra otra superficie: relleno sobre relleno, sin borde */
+.cf-panel {
+  min-width: 0;
+  border-radius: var(--cf-radius-card);
+  background: var(--cf-color-surface-sunken);
+}
+
+/* Control: todo lo clickeable. 36 de alto, radio 8, anillo de 1px. */
+.cf-control {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cf-space-2);
+  width: 100%;
+  height: var(--cf-control-h);
+  padding: 0 var(--cf-space-3);
+  border: 0;
+  border-radius: var(--cf-radius-control);
+  background: var(--cf-color-surface);
+  box-shadow: var(--cf-ring-control);
+  color: var(--cf-color-ink);
+  font: 400 var(--cf-text-body) / 20px var(--cf-font-sans);
+  outline: none;
+}
+.cf-control::placeholder { color: var(--cf-color-ink-muted); opacity: 1; }
+.cf-control:focus-visible { box-shadow: var(--cf-ring-control), var(--cf-ring-focus); }
+.cf-control:disabled { background: var(--cf-color-surface-hover); color: var(--cf-color-ink-faint); }
+
+.cf-input,
+.cf-number { font-variant-numeric: tabular-nums; }
+.cf-number { text-align: right; }
+
+/* Select: el mismo control, con la flecha dibujada como fondo */
+.cf-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  background-color: var(--cf-color-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236E6E73' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+}
+
+/* Color: swatch plano más hex, dentro de un control */
+.cf-color { gap: var(--cf-space-2); }
+.cf-swatch {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--cf-radius-xs);
+  background: var(--swatch, var(--cf-color-ink));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+.cf-hex {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cf-color-ink);
+  font: 400 var(--cf-text-body) / 20px var(--cf-font-sans);
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+/* Slider: pista de 4, pulgar blanco con anillo */
+.cf-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  outline: none;
+}
+.cf-range::-webkit-slider-runnable-track { height: 4px; border-radius: var(--cf-radius-pill); background: var(--cf-color-track); }
+.cf-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border: 0;
+  border-radius: var(--cf-radius-pill);
+  background: var(--cf-color-surface);
+  box-shadow: var(--cf-ring-control);
+}
+.cf-range:focus-visible::-webkit-slider-thumb { box-shadow: var(--cf-ring-control), var(--cf-ring-focus); }
+
+/* Toggle: pastilla de 36 x 20. Encendido en ink. */
+.cf-toggle {
+  position: relative;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--cf-radius-pill);
+  background: var(--cf-color-border-strong);
+  cursor: pointer;
+  outline: none;
+}
+.cf-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--cf-radius-pill);
+  background: var(--cf-color-surface);
+  box-shadow: var(--cf-ring-control);
+  transition: transform 0.15s ease;
+}
+.cf-toggle[aria-checked="true"] { background: var(--cf-grad-ink); box-shadow: var(--cf-bevel-ink); }
+.cf-toggle[aria-checked="true"]::after { transform: translateX(16px); box-shadow: none; }
+.cf-toggle:focus-visible { box-shadow: var(--cf-ring-focus); }
+
+/* ---------- Track segmentado ----------
+   Sirve como filter bar y como segmented control. Padding 4, chips de 26, radio 10. */
+.cf-track {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cf-space-1);
+  padding: var(--cf-space-1);
+  border-radius: var(--cf-radius-group);
+  background: var(--cf-color-track);
+}
+.cf-track__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--cf-radius-xs);
+  background: transparent;
+  color: var(--cf-color-ink-soft);
+  font: 400 var(--cf-text-body) / 18px var(--cf-font-sans);
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+}
+.cf-track__chip:hover { color: var(--cf-color-ink); }
+.cf-track__chip[aria-selected="true"] { background: var(--cf-color-surface); box-shadow: var(--cf-ring-rim); color: var(--cf-color-ink); }
+.cf-track__chip:focus-visible { box-shadow: var(--cf-ring-focus); }
+
+/* Chip de fecha suelto: blanco, 34 de alto, con anillo de 1px */
+.cf-datechip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cf-space-2);
+  height: 34px;
+  padding: 0 var(--cf-space-3);
+  border-radius: var(--cf-radius-control);
+  background: var(--cf-color-surface);
+  box-shadow: var(--cf-ring-rim);
+  color: var(--cf-color-ink);
+  font: 400 var(--cf-text-body) / 18px var(--cf-font-sans);
+  white-space: nowrap;
+}
+
+/* ---------- Sidebar ----------
+   Fondo canvas, borde derecho de 1px. Brand de 66, búsqueda hundida de 36, items de 34 con paso de 38. */
+.cf-sidebar {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: var(--cf-sidebar);
+  height: 100%;
+  background: var(--cf-color-canvas);
+  border-right: 1px solid var(--cf-color-edge);
+}
+.cf-brand {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  height: 66px;
+  padding: 0 26px 0 16px;
+  border-bottom: 1px solid var(--cf-color-edge);
+}
+.cf-brand__logo { flex: 0 0 auto; width: 34px; height: 34px; }
+.cf-brand__text { display: flex; flex-direction: column; gap: 1px; }
+.cf-brand__name { color: var(--cf-color-ink); font: 600 var(--cf-text-body) / 18px var(--cf-font-sans); }
+.cf-brand__by { color: var(--cf-color-ink-muted); font: 400 var(--cf-text-micro) / var(--cf-lh-micro) var(--cf-font-sans); }
+
+.cf-sidebar__search {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  margin: 12px 16px 0;
+  padding: 0 10px;
+  border-radius: var(--cf-radius-control);
+  background: var(--cf-color-well);
+  color: var(--cf-color-ink-muted);
+  font: 400 var(--cf-text-ui) / 18px var(--cf-font-sans);
+}
+.cf-sidebar__search svg { flex: 0 0 auto; width: 18px; height: 18px; }
+.cf-sidebar__search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cf-color-ink);
+  font: inherit;
+  outline: none;
+}
+.cf-sidebar__search input::placeholder { color: var(--cf-color-ink-muted); opacity: 1; }
+.cf-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--cf-radius-xs);
+  background: var(--cf-color-surface);
+  box-shadow: 0 0 0 1px var(--cf-color-edge);
+  color: var(--cf-color-ink-muted);
+  font: 400 var(--cf-text-micro) / var(--cf-lh-micro) var(--cf-font-sans);
+}
+
+.cf-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cf-space-1);
+  padding: 12px 16px 0;
+}
+.cf-nav__item {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--cf-radius-control);
+  color: var(--cf-color-ink-soft);
+  font: 400 var(--cf-text-ui) / 18px var(--cf-font-sans);
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+}
+.cf-nav__item svg { flex: 0 0 auto; width: 18px; height: 18px; }
+.cf-nav__item:hover { background: var(--cf-color-surface-hover); }
+.cf-nav__item[aria-current="page"] {
+  background: var(--cf-color-surface);
+  box-shadow: var(--cf-ring-selected);
+  color: var(--cf-color-ink);
+}
+.cf-nav__item:focus-visible { box-shadow: var(--cf-ring-focus); }
+
+.cf-group-label {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding-left: 12px;
+  color: var(--cf-color-ink-muted);
+  font: 400 var(--cf-text-label) / var(--cf-lh-label) var(--cf-font-sans);
+}
+
+/* Divisor de grupo: de borde a borde del sidebar */
+.cf-divider {
+  height: 1px;
+  margin: var(--cf-space-2) -16px;
+  background: var(--cf-color-border);
+}
+
+/* Pie (ayuda): sin divisor encima */
+.cf-sidebar__foot { margin-top: auto; padding: 12px 16px 16px; }
+
+/* ---------- Separadores ----------
+   Groove: sobre panel hundido, con 24 de sangría. Hairline: sobre card blanca. */
+.cf-groove {
+  box-sizing: border-box;
+  height: 2px;
+  margin: 0 var(--cf-space-6);
+  border-top: 1px solid var(--cf-color-groove);
+  box-shadow: var(--cf-bevel-groove);
+}
+.cf-hairline {
+  height: 1px;
+  background: var(--cf-color-border);
+}
+
+/* ---------- Barra de ticks ----------
+   100 ticks coloreados por etapa, o marcas de 5.5 x 22 con paso de 8. Lo vacío es #DEDEDE. */
+.cf-ticks {
+  display: flex;
+  align-items: stretch;
+  gap: 1.5px;
+  height: 22px;
+}
+.cf-tick {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 2.75px;
+  background: var(--cf-color-empty);
+}
+.cf-marks {
+  display: flex;
+  align-items: stretch;
+  gap: 2.5px;
+  height: 22px;
+}
+.cf-mark {
+  flex: 0 0 5.5px;
+  border-radius: 2.75px;
+  background: var(--cf-color-empty);
+}
+.cf-tick.is-1, .cf-mark.is-1 { background: var(--cf-grad-data-1); }
+.cf-tick.is-2, .cf-mark.is-2 { background: var(--cf-grad-data-2); }
+.cf-tick.is-3, .cf-mark.is-3 { background: var(--cf-grad-data-3); }
+.cf-tick.is-4, .cf-mark.is-4 { background: var(--cf-grad-data-4); }
+.cf-tick.is-5, .cf-mark.is-5 { background: var(--cf-grad-data-5); }
+.cf-tick.is-6, .cf-mark.is-6 { background: var(--cf-grad-data-6); }
+
+/* ---------- Rail de grupo ----------
+   Marco blanco de radio 10 y padding 4, con celdas en canvas de radio 6 (10 - 4). */
+.cf-rail {
+  display: flex;
+  gap: var(--cf-space-1);
+  padding: var(--cf-space-1);
+  border-radius: var(--cf-radius-group);
+  background: var(--cf-color-surface);
+}
+.cf-rail__cell {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 14px var(--cf-space-4);
+  border-radius: var(--cf-radius-xs);
+  background: var(--cf-color-canvas);
+}
+
+/* ---------- Dropzone de subida ----------
+   No existe en Paper. Panel hundido, borde discontinuo border-strong, radio 12, icon tile y texto muted. */
+.cf-dropzone {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cf-space-3);
+  padding: var(--cf-space-8) var(--cf-space-6);
+  border: 1px dashed var(--cf-color-border-strong);
+  border-radius: var(--cf-radius-card);
+  background: var(--cf-color-surface-sunken);
+  color: var(--cf-color-ink-muted);
+  font: 400 var(--cf-text-body) / var(--cf-lh-body) var(--cf-font-sans);
+  text-align: center;
+  cursor: pointer;
+}
+.cf-dropzone__title { margin: 0; color: var(--cf-color-ink); font: 500 var(--cf-text-ui) / var(--cf-lh-ui) var(--cf-font-sans); }
+.cf-dropzone__hint { margin: 0; color: var(--cf-color-ink-muted); font: 400 var(--cf-text-micro) / var(--cf-lh-micro) var(--cf-font-sans); }
+.cf-dropzone.is-over { border-color: var(--cf-color-ink-faint); background: var(--cf-color-surface-hover); }
+.cf-dropzone:focus-visible { box-shadow: var(--cf-ring-focus); }
+
+/* ---------- Estado vacío ----------
+   La pista se dibuja siempre (.cf-tick sin etapa) y la métrica pasa a un guion largo (.cf-kpi__metric.is-empty). */
+
+/* ---------- Extensiones de la app ----------
+   Piezas que la migración necesita y la galería de D1 no trae. Mismas reglas: sin sombras, anillos e insets. */
+
+/* Chip ink: marca lo seleccionado (preset en uso). Nunca un fondo de color. */
+.cf-chip--ink { background: var(--cf-grad-ink); color: var(--cf-color-ink-inverse); box-shadow: var(--cf-bevel-ink); }
+
+/* Estado con texto en ink: el punto lleva el color y el texto va en ink (errores de la API). */
+.cf-status--ink { color: var(--cf-color-ink); }
+
+/* Radios de track: el seleccionado va blanco con el anillo de la fila, igual que aria-selected. */
+.cf-track__chip[aria-checked="true"] { background: var(--cf-color-surface); box-shadow: var(--cf-ring-rim); color: var(--cf-color-ink); }
+.cf-track__chip[aria-checked="true"]:focus-visible { box-shadow: var(--cf-ring-rim), var(--cf-ring-focus); }
+
+/* Track de ancho completo, para campos y filas. */
+.cf-track--fill { display: flex; width: 100%; }
+.cf-track--fill .cf-track__chip { flex: 1 1 0; min-width: 0; padding: 0 var(--cf-space-2); }
+
+/* Foco dentro de un control con hijos enfocables (el hex dentro de un color). */
+.cf-control:focus-within { box-shadow: var(--cf-ring-control), var(--cf-ring-focus); }
+
+/* Control de ancho fijo, para números dentro de una fila. */
+.cf-control--sm { width: 80px; flex: 0 0 80px; padding: 0 var(--cf-space-2); }
+
+/* Body de KPI con alto automático: el de 90 es para una métrica, los campos de editor necesitan más. */
+.cf-kpi__body--auto { height: auto; }
+
+/* Campo: label 13 muted sobre el control. El toggle va en la misma fila que su label. */
+.cf-field { display: flex; flex-direction: column; gap: var(--cf-space-2); min-width: 0; }
+.cf-field__head { display: flex; align-items: center; justify-content: space-between; gap: var(--cf-space-3); min-height: 20px; }
+.cf-field__label { color: var(--cf-color-ink-muted); font: 400 var(--cf-text-label) / var(--cf-lh-label) var(--cf-font-sans); }
+.cf-field__row { display: flex; align-items: center; gap: var(--cf-space-3); min-width: 0; }
+.cf-field__row > .cf-range { flex: 1 1 auto; min-width: 0; }
+.cf-field__hint { color: var(--cf-color-ink-muted); font: 400 var(--cf-text-micro) / var(--cf-lh-micro) var(--cf-font-sans); }
+.cf-field__off { color: var(--cf-color-ink-faint); font: 400 var(--cf-text-body) / 20px var(--cf-font-sans); }
+
+/* Swatch de color: el selector nativo se dibuja como el swatch plano de 20 con radio 6. */
+.cf-swatch-input { flex: 0 0 auto; box-sizing: border-box; width: 20px; height: 20px; margin: 0; padding: 0; border: 0; border-radius: var(--cf-radius-xs); background: none; cursor: pointer; outline: none; overflow: hidden; }
+.cf-swatch-input::-webkit-color-swatch-wrapper { padding: 0; }
+.cf-swatch-input::-webkit-color-swatch { border: 0; border-radius: var(--cf-radius-xs); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1); }
+.cf-swatch-input::-moz-color-swatch { border: 0; border-radius: var(--cf-radius-xs); }
+.cf-swatch-input:focus-visible { box-shadow: var(--cf-ring-focus); }
+
+/* Disclosure (Avanzado): control de 36 con la flecha que gira al abrir. */
+.cf-disclosure { display: flex; align-items: center; justify-content: space-between; gap: var(--cf-space-2); width: 100%; height: var(--cf-control-h); padding: 0 var(--cf-space-3); border: 0; border-radius: var(--cf-radius-control); background: var(--cf-color-surface); box-shadow: var(--cf-ring-control); color: var(--cf-color-ink-soft); font: 400 var(--cf-text-body) / 20px var(--cf-font-sans); text-align: left; cursor: pointer; outline: none; }
+.cf-disclosure:hover { background: var(--cf-color-surface-hover); }
+.cf-disclosure:focus-visible { box-shadow: var(--cf-ring-control), var(--cf-ring-focus); }
+.cf-disclosure [data-icon] { transition: transform 0.15s ease; }
+.cf-disclosure[aria-expanded="true"] [data-icon] { transform: rotate(180deg); }
+
+/* Tracks con más opciones que el ancho: las opciones bajan a otra fila en vez de salirse. */
+.cf-track--fill { flex-wrap: wrap; row-gap: var(--cf-space-1); }
+.cf-track--fill .cf-track__chip { flex: 1 1 auto; }
+
+/* Enlaces con clase de botón: sin subrayado. */
+a.cf-btn { text-decoration: none; }
+
+/* Foco visible en el buscador del menú: el input no trae anillo propio. */
+.cf-sidebar__search:focus-within { box-shadow: var(--cf-ring-focus); }

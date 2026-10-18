@@ -1,0 +1,248 @@
+// Worker del sitio: Cloudflare Workers con assets estáticos. Hace lo que antes hacían _middleware.js y los proxies de
+// Pages Functions, porque wrangler 4.151.1 ya no crea proyectos Pages nuevos.
+//
+// - Puerta de acceso: una contraseña (SITE_PASSWORD) abre una sesión, una cookie HttpOnly firmada con HMAC-SHA256
+//   (SESSION_SECRET) que dura 30 días. Solo son públicos la página de acceso y los archivos que usa.
+// - /api/* y /fonts/* se reenvían a BACKEND_URL con X-Subs-Key, así la clave nunca llega al navegador. El cuerpo
+//   viaja en streaming y las cabeceras de Range, ETag o X-Frame-Time vuelven tal cual.
+// - El resto de archivos sale de los assets (ASSETS) solo con sesión.
+// - Sin secretos, no deja pasar nada: falla cerrado.
+
+const COOKIE = "subs_session";
+const SESSION_SECONDS = 60 * 60 * 24 * 30;
+const VERSION = "v1";
+const PUBLIC_PATHS = new Set(["/css/tokens.css", "/css/components.css", "/assets/logo.svg"]);
+const FAILED_LOGIN_DELAY_MS = 800;
+const API_HEADERS = ["range", "if-range", "if-none-match", "if-modified-since", "content-type", "content-length", "accept"];
+const FONT_HEADERS = ["range", "if-range", "if-none-match", "if-modified-since", "accept"];
+const HOP_BY_HOP = new Set([
+  "connection", "keep-alive", "transfer-encoding", "upgrade", "proxy-authenticate", "proxy-authorization", "te", "trailer", "set-cookie",
+]);
+const UNAVAILABLE = "El servidor de procesamiento no está disponible. Intenta en unos minutos.";
+const encoder = new TextEncoder();
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    if (path === "/login") return login(request, env);
+    if (path === "/logout") return logout();
+    if (PUBLIC_PATHS.has(path)) return env.ASSETS.fetch(request);
+    if (!(await hasSession(request, env))) {
+      return redirect(`/login?next=${encodeURIComponent(safeNext(path + url.search))}`);
+    }
+    if (path === "/api" || path.startsWith("/api/")) return proxy(request, env, API_HEADERS);
+    if (path === "/fonts" || path.startsWith("/fonts/")) return proxy(request, env, FONT_HEADERS);
+    return env.ASSETS.fetch(request);
+  },
+};
+
+async function proxy(request, env, allowedHeaders) {
+  const backend = (env.BACKEND_URL || "").replace(/\/+$/, "");
+  if (!backend || !env.SUBS_API_KEY) {
+    console.error("Faltan BACKEND_URL o SUBS_API_KEY en los secretos del Worker.");
+    return unavailable();
+  }
+  const url = new URL(request.url);
+  const headers = new Headers();
+  for (const name of allowedHeaders) {
+    const value = request.headers.get(name);
+    if (value !== null) headers.set(name, value);
+  }
+  headers.set("X-Subs-Key", env.SUBS_API_KEY);
+  const init = { method: request.method, headers, redirect: "manual" };
+  if (request.method !== "GET" && request.method !== "HEAD") init.body = request.body;
+  let upstream;
+  try {
+    upstream = await fetch(`${backend}${url.pathname}${url.search}`, init);
+  } catch (error) {
+    console.error("Backend inaccesible:", error?.message ?? String(error));
+    return unavailable();
+  }
+  return relay(upstream, request.method, backend);
+}
+
+function relay(upstream, method, backend) {
+  const headers = new Headers();
+  for (const [name, value] of upstream.headers) {
+    if (!HOP_BY_HOP.has(name.toLowerCase())) headers.set(name, value);
+  }
+  // Una redirección del backend no debe revelar la URL del túnel: se devuelve solo la ruta.
+  const location = headers.get("location");
+  if (location && location.startsWith(backend)) headers.set("location", location.slice(backend.length) || "/");
+  const bodiless = method === "HEAD" || upstream.status === 304 || upstream.status === 204;
+  return new Response(bodiless ? null : upstream.body, { status: upstream.status, statusText: upstream.statusText, headers });
+}
+
+function unavailable() {
+  return new Response(JSON.stringify({ detail: UNAVAILABLE }), {
+    status: 503,
+    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
+  });
+}
+
+async function login(request, env) {
+  if (request.method !== "POST") {
+    return loginPage({ next: safeNext(new URL(request.url).searchParams.get("next")) });
+  }
+  const form = await request.formData();
+  const next = safeNext(form.get("next"));
+  if (!env.SITE_PASSWORD || !env.SESSION_SECRET) {
+    return loginPage({ next, error: "El sitio no está configurado: faltan secretos en el Worker.", status: 500 });
+  }
+  if (await sameText(String(form.get("password") ?? ""), env.SITE_PASSWORD)) {
+    const token = await newSession(env.SESSION_SECRET);
+    const headers = new Headers({ Location: next, "Cache-Control": "no-store" });
+    headers.append("Set-Cookie", sessionCookie(token));
+    return new Response(null, { status: 303, headers });
+  }
+  await new Promise((resolve) => setTimeout(resolve, FAILED_LOGIN_DELAY_MS));
+  return loginPage({ next, error: "Contraseña incorrecta.", status: 401 });
+}
+
+function logout() {
+  const headers = new Headers({ Location: "/login", "Cache-Control": "no-store" });
+  headers.append("Set-Cookie", `${COOKIE}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax`);
+  return new Response(null, { status: 302, headers });
+}
+
+async function hasSession(request, env) {
+  if (!env.SESSION_SECRET) return false;
+  const token = readCookie(request.headers.get("cookie"), COOKIE);
+  const parts = token ? token.split(".") : [];
+  if (parts.length !== 3 || parts[0] !== VERSION) return false;
+  const expires = Number(parts[1]);
+  if (!Number.isInteger(expires) || expires * 1000 <= Date.now()) return false;
+  const signature = fromBase64url(parts[2]);
+  if (!signature) return false;
+  return crypto.subtle.verify("HMAC", await hmacKey(env.SESSION_SECRET), signature, encoder.encode(`${VERSION}.${parts[1]}`));
+}
+
+async function newSession(secret) {
+  const expires = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
+  const payload = `${VERSION}.${expires}`;
+  const signature = await crypto.subtle.sign("HMAC", await hmacKey(secret), encoder.encode(payload));
+  return `${payload}.${toBase64url(new Uint8Array(signature))}`;
+}
+
+function sessionCookie(token) {
+  return `${COOKIE}=${token}; Max-Age=${SESSION_SECONDS}; Path=/; HttpOnly; Secure; SameSite=Lax`;
+}
+
+function hmacKey(secret) {
+  return crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+}
+
+// Compara dos textos en tiempo constante: se comparan sus resúmenes SHA-256, que tienen la misma longitud.
+async function sameText(given, expected) {
+  const [a, b] = await Promise.all([
+    crypto.subtle.digest("SHA-256", encoder.encode(given)),
+    crypto.subtle.digest("SHA-256", encoder.encode(expected)),
+  ]);
+  const x = new Uint8Array(a);
+  const y = new Uint8Array(b);
+  let difference = 0;
+  for (let i = 0; i < x.length; i++) difference |= x[i] ^ y[i];
+  return difference === 0;
+}
+
+function readCookie(header, name) {
+  if (!header) return null;
+  for (const part of header.split(";")) {
+    const [key, ...rest] = part.trim().split("=");
+    if (key === name) return rest.join("=");
+  }
+  return null;
+}
+
+// Solo rutas relativas del propio sitio. Nunca vuelve al login ni a una URL externa.
+function safeNext(value) {
+  const target = typeof value === "string" ? value : "/";
+  const valid =
+    target.startsWith("/") &&
+    !target.startsWith("//") &&
+    !target.includes("\\") &&
+    !target.startsWith("/login") &&
+    !target.startsWith("/logout");
+  return valid ? target : "/";
+}
+
+function redirect(location) {
+  return new Response(null, { status: 302, headers: { Location: location, "Cache-Control": "no-store" } });
+}
+
+function loginPage({ next, error = "", status = 200 }) {
+  return new Response(pageHtml(next, error), {
+    status,
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Robots-Tag": "noindex, nofollow",
+      "X-Frame-Options": "DENY",
+      "Referrer-Policy": "no-referrer",
+    },
+  });
+}
+
+function pageHtml(next, error) {
+  const alert = error ? `<p class="cf-field__hint" role="alert">${escapeHtml(error)}</p>` : "";
+  return `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light">
+  <title>Acceso · Click-Flow Subtítulos</title>
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--cf-color-canvas); color: var(--cf-color-ink); font-family: var(--cf-font-sans); }
+    .acceso { width: min(92vw, 380px); display: grid; gap: 16px; padding: 28px; box-sizing: border-box; }
+    .acceso form { display: grid; gap: 12px; }
+  </style>
+</head>
+<body>
+  <main class="cf-card acceso" aria-labelledby="acceso-titulo">
+    <div class="cf-brand">
+      <img class="cf-brand__logo" src="/assets/logo.svg" width="34" height="34" alt="">
+      <div class="cf-brand__text">
+        <span class="cf-brand__name">Click-Flow</span>
+        <span class="cf-brand__by">Subtítulos</span>
+      </div>
+    </div>
+    <h1 class="t-page" id="acceso-titulo">Entrar</h1>
+    <p class="t-body">Introduce la contraseña del sitio.</p>
+    <form method="post" action="/login">
+      <input type="hidden" name="next" value="${escapeHtml(next)}">
+      <label class="cf-field">
+        <span class="cf-field__label">Contraseña</span>
+        <input class="cf-input" type="password" name="password" autocomplete="current-password" required autofocus>
+      </label>
+      <button class="cf-btn cf-btn--ink" type="submit">Entrar</button>
+    </form>
+    ${alert}
+  </main>
+</body>
+</html>`;
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+}
+
+function toBase64url(bytes) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function fromBase64url(text) {
+  if (!/^[A-Za-z0-9_-]+$/.test(text)) return null;
+  const base64 = text.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(text.length / 4) * 4, "=");
+  try {
+    return Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+  } catch {
+    return null;
+  }
+}

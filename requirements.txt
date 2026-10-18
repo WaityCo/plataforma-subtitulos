@@ -1,0 +1,11 @@
+# av 19 quitó el argumento metadata_errors que usa faster-whisper 1.2.1.
+av==16.1.0
+faster-whisper==1.2.1
+# Métricas de texto y generación de las instancias estáticas de Montserrat.
+fonttools==4.67.0
+# Gancho titular (engine/hook.py) y medida con kerning de HarfBuzz (exact_metrics, geometría).
+pillow==13.0.0
+uharfbuzz==0.56.3
+# Grafemas (\X) del gancho: una bandera o una familia con ZWJ se dibuja como un solo emoji.
+regex==2026.9.29
+pytest==9.1.1

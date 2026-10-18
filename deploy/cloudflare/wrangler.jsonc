@@ -1,0 +1,12 @@
+{
+  // Sitio público con contraseña: un Worker con assets estáticos (build/). run_worker_first hace que el Worker
+  // compruebe la sesión antes de servir cualquier archivo.
+  "name": "subtitulos",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-12",
+  "assets": {
+    "directory": "./build",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  }
+}

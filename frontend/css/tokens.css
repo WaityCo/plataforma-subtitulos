@@ -1,0 +1,173 @@
+/* Click-Flow Design System v6, adaptado a Subtítulos · tokens (modo claro).
+   Fuente: archivo de Paper "Click-Flow Design System" (01, 02, 03 y 04).
+   Cuando una etiqueta de Paper no coincide con la variable que se renderiza, gana la variable.
+   El rosa solo aparece en el logo. Nada proyecta sombra: solo anillos (0 0 0 Npx) e insets. */
+
+:root {
+  /* Neutrales: concreto y tinta */
+  --cf-color-canvas: #F3F3F3;
+  --cf-color-surface: #FFFFFF;
+  --cf-color-surface-sunken: #EDEDED;
+  --cf-color-surface-hover: #F2F2F2;
+  --cf-color-well: #ECECEC;
+  --cf-color-track: #EBEBEB;
+  --cf-color-border: #E9E9E9;
+  --cf-color-border-strong: #DCDCDC;
+  --cf-color-hairline: #E3E3E3;
+  --cf-color-groove: #DDDDDD;
+  --cf-color-edge: #E1E1E1;
+  --cf-color-rim: #EAEAEA;
+  --cf-color-rim-selected: #E5E5E5;
+  --cf-color-empty: #DEDEDE;
+  --cf-color-ink-faint: #9E9EA4;
+  --cf-color-ink-muted: #6E6E73;
+  --cf-color-ink-soft: #45464B;
+  --cf-color-ink: #151517;
+  --cf-color-ink-inverse: #FFFFFF;
+  --cf-color-ink-pressed: #111214;
+  --cf-color-focus-ring: rgba(59, 91, 219, 0.35);
+
+  /* Pigmentos de datos, en orden, máximo 5 por vista.
+     El plano sirve para leyendas y puntos; el gradiente, para lo que mide. */
+  --cf-data-1: #5585F0;
+  --cf-data-1-top: #6591F1;
+  --cf-data-1-bot: #4579EF;
+  --cf-data-2: #F1854B;
+  --cf-data-2-top: #F2905C;
+  --cf-data-2-bot: #F07A3A;
+  --cf-data-3: #2AAE8E;
+  --cf-data-3-top: #2DBC9A;
+  --cf-data-3-bot: #27A082;
+  --cf-data-4: #9B72F0;
+  --cf-data-4-top: #A682F2;
+  --cf-data-4-bot: #9062EE;
+  --cf-data-5: #F0665F;
+  --cf-data-5-top: #F2766F;
+  --cf-data-5-bot: #EE564F;
+  --cf-data-6: #37BE6A;
+  --cf-data-6-top: #3FC873;
+  --cf-data-6-bot: #33B062;
+  --cf-data-7: #2AA8E8;
+  --cf-data-7-top: #3AAFEA;
+  --cf-data-7-bot: #1AA1E6;
+  --cf-data-8: #7D8899;
+  --cf-data-8-top: #8791A1;
+  --cf-data-8-bot: #737F91;
+
+  --cf-grad-data-1: linear-gradient(180deg, var(--cf-data-1-top) 0%, var(--cf-data-1-bot) 100%);
+  --cf-grad-data-2: linear-gradient(180deg, var(--cf-data-2-top) 0%, var(--cf-data-2-bot) 100%);
+  --cf-grad-data-3: linear-gradient(180deg, var(--cf-data-3-top) 0%, var(--cf-data-3-bot) 100%);
+  --cf-grad-data-4: linear-gradient(180deg, var(--cf-data-4-top) 0%, var(--cf-data-4-bot) 100%);
+  --cf-grad-data-5: linear-gradient(180deg, var(--cf-data-5-top) 0%, var(--cf-data-5-bot) 100%);
+  --cf-grad-data-6: linear-gradient(180deg, var(--cf-data-6-top) 0%, var(--cf-data-6-bot) 100%);
+  --cf-grad-data-7: linear-gradient(180deg, var(--cf-data-7-top) 0%, var(--cf-data-7-bot) 100%);
+  --cf-grad-data-8: linear-gradient(180deg, var(--cf-data-8-top) 0%, var(--cf-data-8-bot) 100%);
+
+  /* Escala secuencial: una variable, para densidad o progreso. Nunca para categorías. */
+  --cf-seq-1: #DCE6FD;
+  --cf-seq-2: #B3C6FA;
+  --cf-seq-3: #85A3F5;
+  --cf-seq-4: #5585F0;
+  --cf-seq-5: #3260CE;
+
+  /* Semánticos: punto sólido más texto. Sin bloques pastel. */
+  --cf-success: #529C58;
+  --cf-success-top: #5FA665;
+  --cf-warning: #B4690E;
+  --cf-danger: #BC4F4C;
+  --cf-danger-top: #C45B58;
+  --cf-info: #2563C9;
+  --cf-neutral-top: #ABABB1;
+
+  /* Delta: círculo de 12 con el centro 3 puntos más claro que el borde */
+  --cf-grad-success: radial-gradient(circle at 50% 45%, var(--cf-success-top) 0%, var(--cf-success) 70%);
+  --cf-grad-danger: radial-gradient(circle at 50% 45%, var(--cf-danger-top) 0%, var(--cf-danger) 70%);
+  --cf-grad-neutral: radial-gradient(circle at 50% 45%, var(--cf-neutral-top) 0%, var(--cf-color-ink-faint) 70%);
+
+  /* Brand: solo para el logo. Ningún control, nav ni serie usa rosa. */
+  --cf-brand-300: #FF93B5;
+  --cf-brand-400: #F85C8E;
+  --cf-brand-500: #E51459;
+  --cf-brand-600: #C80E4B;
+  --cf-logo-top: #F63C79;
+  --cf-logo-bot: #D01053;
+  --cf-grad-logo: linear-gradient(180deg, var(--cf-logo-top) 0%, var(--cf-logo-bot) 100%);
+
+  /* Botón ink (primario): gradiente oscuro. Hover y pressed medidos en Paper. */
+  --cf-grad-ink: linear-gradient(180deg, #3A3B3F 0%, #1C1D21 100%);
+  --cf-grad-ink-hover: linear-gradient(180deg, #292A2E 0%, #0C0D10 100%);
+
+  /* Tile neutral: pizarra, medida en Paper (no es un pigmento de datos) */
+  --cf-grad-neutral-tile: linear-gradient(180deg, #838F9E 0%, #5A6574 100%);
+
+  /* Tipografía: SF Pro del sistema. Por debajo de 20px se usa Text, desde 20px Display. */
+  --cf-font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+  --cf-text-display: 38px;   --cf-lh-display: 44px;
+  --cf-text-metric: 30px;    --cf-lh-metric: 36px;
+  --cf-text-page: 21px;      --cf-lh-page: 28px;
+  --cf-text-section: 18px;   --cf-lh-section: 24px;
+  --cf-text-card: 16px;      --cf-lh-card: 22px;
+  --cf-text-ui: 15px;        --cf-lh-ui: 22px;
+  --cf-text-body: 14px;      --cf-lh-body: 20px;
+  --cf-text-label: 13px;     --cf-lh-label: 18px;
+  --cf-text-micro: 12px;     --cf-lh-micro: 16px;
+  --cf-track-display: -0.03em;
+  --cf-track-metric: -0.03em;
+  --cf-track-card: -0.01em;
+
+  /* Espaciado: grilla de 4 */
+  --cf-space-1: 4px;
+  --cf-space-2: 8px;
+  --cf-space-3: 12px;
+  --cf-space-4: 16px;
+  --cf-space-5: 20px;
+  --cf-space-6: 24px;
+  --cf-space-8: 32px;
+  --cf-space-10: 40px;
+  --cf-space-12: 48px;
+
+  /* Radios según el tamaño de la cosa. Anidar: restar el padding. */
+  --cf-radius-xs: 6px;
+  --cf-radius-sm: 8px;
+  --cf-radius-control: 8px;
+  --cf-radius-tile: 8px;
+  --cf-radius-group: 10px;
+  --cf-radius-card: 12px;
+  --cf-radius-pill: 999px;
+
+  /* Carriles fijos */
+  --cf-rail: 72px;
+  --cf-sidebar: 268px;
+  --cf-content-max: 1160px;
+  --cf-control-h: 36px;
+
+  /* Anillos y biseles. Ningún box-shadow proyecta. */
+  --cf-ring-control: 0 0 0 1px var(--cf-color-border-strong);
+  --cf-ring-rim: 0 0 0 1px var(--cf-color-rim);
+  --cf-ring-border: 0 0 0 1px var(--cf-color-border);
+  --cf-ring-selected: 0 0 0 1px var(--cf-color-rim-selected);
+  --cf-ring-focus: 0 0 0 3px var(--cf-color-focus-ring);
+  --cf-bevel-ink: inset 0 0 0 1px rgba(0, 0, 0, 0.3), inset 0 0 0 2px rgba(255, 255, 255, 0.16);
+  --cf-bevel-ink-hover: inset 0 0 0 1px rgba(0, 0, 0, 0.35), inset 0 0 0 2px rgba(255, 255, 255, 0.14);
+  --cf-bevel-ink-pressed: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+  --cf-bevel-tile: inset 0 0 0 1px rgba(0, 0, 0, 0.14), inset 0 0 0 2px rgba(255, 255, 255, 0.22);
+  --cf-bevel-dot: inset 0 0 0 1px rgba(0, 0, 0, 0.3), inset 0 0 0 2px rgba(255, 255, 255, 0.55);
+  --cf-bevel-groove: inset 0 1px 0 #FFFFFF;
+}
+
+/* Escala tipográfica como clases utilitarias */
+.t-display { font: 500 var(--cf-text-display) / var(--cf-lh-display) var(--cf-font-sans); letter-spacing: var(--cf-track-display); }
+.t-metric  { font: 500 var(--cf-text-metric) / var(--cf-lh-metric) var(--cf-font-sans); letter-spacing: var(--cf-track-metric); }
+.t-page    { font: 500 var(--cf-text-page) / var(--cf-lh-page) var(--cf-font-sans); letter-spacing: 0; }
+.t-section { font: 400 var(--cf-text-section) / var(--cf-lh-section) var(--cf-font-sans); letter-spacing: 0; }
+.t-card    { font: 500 var(--cf-text-card) / var(--cf-lh-card) var(--cf-font-sans); letter-spacing: var(--cf-track-card); }
+.t-ui      { font: 400 var(--cf-text-ui) / var(--cf-lh-ui) var(--cf-font-sans); letter-spacing: 0; }
+.t-body    { font: 400 var(--cf-text-body) / var(--cf-lh-body) var(--cf-font-sans); letter-spacing: 0; }
+.t-label   { font: 400 var(--cf-text-label) / var(--cf-lh-label) var(--cf-font-sans); letter-spacing: 0; }
+.t-micro   { font: 400 var(--cf-text-micro) / var(--cf-lh-micro) var(--cf-font-sans); letter-spacing: 0; }
+
+/* Color del texto, para combinar con la escala */
+.t-ink   { color: var(--cf-color-ink); }
+.t-soft  { color: var(--cf-color-ink-soft); }
+.t-muted { color: var(--cf-color-ink-muted); }
+.t-faint { color: var(--cf-color-ink-faint); }

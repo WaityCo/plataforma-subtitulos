@@ -1,0 +1,1032 @@
+{
+ "video": "DekXWuPh2T-",
+ "url": "https://www.instagram.com/ken.remedie/reel/DekXWuPh2T-/",
+ "plays_aprox": 251591,
+ "resolucion_analizada": "720x1280 @30fps",
+ "centro_vertical_texto_pct": 0.554,
+ "formato_markup": "*palabra* = palabra en italica (Playfair Display Italic). Resto en regular.",
+ "nota": "Texto revisado a mano frase por frase contra los frames reales. Tiempos de inicio/fin detectados automaticamente a 30fps (precision ~1 frame en cortes limpios).",
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 0.767,
+   "dur": 0.767,
+   "text": "If your socks",
+   "markup": "If your *socks*",
+   "italic": [
+    "socks"
+   ],
+   "words": 3
+  },
+  {
+   "start": 0.767,
+   "end": 1.667,
+   "dur": 0.9,
+   "text": "leave marks like",
+   "markup": "leave marks like",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 1.667,
+   "end": 2.133,
+   "dur": 0.466,
+   "text": "this,",
+   "markup": "this,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 2.133,
+   "end": 2.567,
+   "text": null,
+   "nota": "pausa del habla: no hay subtitulo en pantalla"
+  },
+  {
+   "start": 2.567,
+   "end": 3.667,
+   "dur": 1.1,
+   "text": "that's a backed-up",
+   "markup": "that's a *backed-up*",
+   "italic": [
+    "backed-up"
+   ],
+   "words": 3
+  },
+  {
+   "start": 3.667,
+   "end": 4.033,
+   "dur": 0.366,
+   "text": "gut.",
+   "markup": "gut.",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 4.033,
+   "end": 4.833,
+   "dur": 0.8,
+   "text": "Your jeans dig",
+   "markup": "Your *jeans* dig",
+   "italic": [
+    "jeans"
+   ],
+   "words": 3
+  },
+  {
+   "start": 4.833,
+   "end": 5.933,
+   "dur": 1.1,
+   "text": "into you like",
+   "markup": "into you like",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 5.933,
+   "end": 7.167,
+   "dur": 1.234,
+   "text": "That's a backed-up",
+   "markup": "That's a *backed-up*",
+   "italic": [
+    "backed-up"
+   ],
+   "words": 3
+  },
+  {
+   "start": 7.167,
+   "end": 10.0,
+   "dur": 2.833,
+   "text": "Your chin sags / like this?",
+   "markup": "Your *chin* sags / like this?",
+   "italic": [
+    "chin"
+   ],
+   "words": 5,
+   "nota": "este rango contiene 2+ frases (el detector no separo el corte); el \"/\" marca el cambio. Tiempo no fiable para estadistica."
+  },
+  {
+   "start": 10.0,
+   "end": 14.967,
+   "dur": 4.967,
+   "text": "lemon water,",
+   "markup": "*lemon* water,",
+   "italic": [
+    "lemon"
+   ],
+   "words": 2,
+   "nota": "este rango contiene 2+ frases (el detector no separo el corte); el \"/\" marca el cambio. Tiempo no fiable para estadistica."
+  },
+  {
+   "start": 14.967,
+   "end": 15.767,
+   "dur": 0.8,
+   "text": "anything,",
+   "markup": "anything,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 15.767,
+   "end": 16.567,
+   "dur": 0.8,
+   "text": "and it will not",
+   "markup": "and it will not",
+   "italic": [],
+   "words": 4
+  },
+  {
+   "start": 16.567,
+   "end": 17.4,
+   "dur": 0.833,
+   "text": "clear what has",
+   "markup": "clear what has",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 17.4,
+   "end": 17.933,
+   "dur": 0.533,
+   "text": "been sitting",
+   "markup": "been sitting",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 17.933,
+   "end": 18.933,
+   "dur": 1.0,
+   "text": "inside you for",
+   "markup": "inside you for",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 18.933,
+   "end": 19.467,
+   "dur": 0.534,
+   "text": "years.",
+   "markup": "years.",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 19.467,
+   "end": 20.133,
+   "dur": 0.666,
+   "text": "have been telling",
+   "markup": "have been telling",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 20.133,
+   "end": 20.967,
+   "dur": 0.834,
+   "text": "people this for",
+   "markup": "people this for",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 20.967,
+   "end": 21.567,
+   "dur": 0.6,
+   "text": "years,",
+   "markup": "years,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 21.567,
+   "end": 22.2,
+   "dur": 0.633,
+   "text": "and they never",
+   "markup": "and they never",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 22.2,
+   "end": 23.267,
+   "dur": 1.067,
+   "text": "believe me until",
+   "markup": "believe me until",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 23.267,
+   "end": 24.067,
+   "dur": 0.8,
+   "text": "they try this",
+   "markup": "they try this",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 24.067,
+   "end": 24.633,
+   "dur": 0.566,
+   "text": "instead.",
+   "markup": "instead.",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 24.633,
+   "end": 25.2,
+   "dur": 0.567,
+   "text": "When your gut",
+   "markup": "When your *gut*",
+   "italic": [
+    "gut"
+   ],
+   "words": 3
+  },
+  {
+   "start": 25.2,
+   "end": 25.9,
+   "dur": 0.7,
+   "text": "has been backed",
+   "markup": "has been backed",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 25.9,
+   "end": 26.833,
+   "dur": 0.933,
+   "text": "up for years,",
+   "markup": "up for years,",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 26.833,
+   "end": 27.8,
+   "dur": 0.967,
+   "text": "the lining becomes",
+   "markup": "the *lining* becomes",
+   "italic": [
+    "lining"
+   ],
+   "words": 3
+  },
+  {
+   "start": 27.8,
+   "end": 28.467,
+   "dur": 0.667,
+   "text": "inflamed.",
+   "markup": "inflamed.",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 28.467,
+   "end": 29.1,
+   "dur": 0.633,
+   "text": "This affects",
+   "markup": "This affects",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 29.1,
+   "end": 30.033,
+   "dur": 0.933,
+   "text": "your metabolism,",
+   "markup": "your *metabolism,*",
+   "italic": [
+    "metabolism,"
+   ],
+   "words": 2
+  },
+  {
+   "start": 30.033,
+   "end": 30.767,
+   "dur": 0.734,
+   "text": "causing weight",
+   "markup": "causing *weight*",
+   "italic": [
+    "weight"
+   ],
+   "words": 2
+  },
+  {
+   "start": 30.767,
+   "end": 31.933,
+   "dur": 1.166,
+   "text": "gain and digestion",
+   "markup": "gain and *digestion*",
+   "italic": [
+    "digestion"
+   ],
+   "words": 3
+  },
+  {
+   "start": 31.933,
+   "end": 32.533,
+   "dur": 0.6,
+   "text": "issues,",
+   "markup": "issues,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 32.533,
+   "end": 35.333,
+   "dur": 2.8,
+   "text": "making you bloated / after every meal,",
+   "markup": "making you bloated / after every meal,",
+   "italic": [],
+   "words": 6,
+   "nota": "este rango contiene 2+ frases (el detector no separo el corte); el \"/\" marca el cambio. Tiempo no fiable para estadistica."
+  },
+  {
+   "start": 35.333,
+   "end": 36.2,
+   "dur": 0.867,
+   "text": "energy levels,",
+   "markup": "*energy* levels,",
+   "italic": [
+    "energy"
+   ],
+   "words": 2
+  },
+  {
+   "start": 36.2,
+   "end": 37.033,
+   "dur": 0.833,
+   "text": "which is why you",
+   "markup": "which is why you",
+   "italic": [],
+   "words": 4
+  },
+  {
+   "start": 37.033,
+   "end": 38.067,
+   "dur": 1.034,
+   "text": "may wake up more",
+   "markup": "may wake up more",
+   "italic": [],
+   "words": 4
+  },
+  {
+   "start": 38.067,
+   "end": 39.0,
+   "dur": 0.933,
+   "text": "tired than you",
+   "markup": "tired than you",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 39.0,
+   "end": 39.5,
+   "dur": 0.5,
+   "text": "were the night",
+   "markup": "were the night",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 39.5,
+   "end": 40.1,
+   "dur": 0.6,
+   "text": "before.",
+   "markup": "before.",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 40.1,
+   "end": 40.767,
+   "dur": 0.667,
+   "text": "Let me show you",
+   "markup": "Let me show you",
+   "italic": [],
+   "words": 4
+  },
+  {
+   "start": 40.767,
+   "end": 41.733,
+   "dur": 0.966,
+   "text": "what actually",
+   "markup": "what actually",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 41.733,
+   "end": 42.167,
+   "dur": 0.434,
+   "text": "works.",
+   "markup": "works.",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 42.167,
+   "end": 43.1,
+   "dur": 0.933,
+   "text": "Get a pot of water",
+   "markup": "Get a pot of water",
+   "italic": [],
+   "words": 5
+  },
+  {
+   "start": 43.1,
+   "end": 43.767,
+   "dur": 0.667,
+   "text": "going,",
+   "markup": "going,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 43.767,
+   "end": 44.8,
+   "dur": 1.033,
+   "text": "squeeze in the",
+   "markup": "squeeze in the",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 44.8,
+   "end": 45.967,
+   "dur": 1.167,
+   "text": "juice from a fresh",
+   "markup": "juice from a *fresh*",
+   "italic": [
+    "fresh"
+   ],
+   "words": 4
+  },
+  {
+   "start": 45.967,
+   "end": 46.433,
+   "dur": 0.466,
+   "text": "lemon,",
+   "markup": "*lemon,*",
+   "italic": [
+    "lemon,"
+   ],
+   "words": 1
+  },
+  {
+   "start": 46.433,
+   "end": 47.367,
+   "dur": 0.934,
+   "text": "add one teaspoon",
+   "markup": "add one teaspoon",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 47.367,
+   "end": 48.133,
+   "dur": 0.766,
+   "text": "of chia seed,",
+   "markup": "of *chia* seed,",
+   "italic": [
+    "chia"
+   ],
+   "words": 3
+  },
+  {
+   "start": 48.133,
+   "end": 49.333,
+   "dur": 1.2,
+   "text": "a teaspoon of",
+   "markup": "a teaspoon of",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 49.333,
+   "end": 49.933,
+   "dur": 0.6,
+   "text": "turmeric,",
+   "markup": "*turmeric,*",
+   "italic": [
+    "turmeric,"
+   ],
+   "words": 1
+  },
+  {
+   "start": 49.933,
+   "end": 50.767,
+   "dur": 0.834,
+   "text": "and finish it",
+   "markup": "and finish it",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 50.767,
+   "end": 52.767,
+   "dur": 2.0,
+   "text": "with a pinch of / black pepper.",
+   "markup": "with a pinch of / black pepper.",
+   "italic": [],
+   "words": 6,
+   "nota": "este rango contiene 2+ frases (el detector no separo el corte); el \"/\" marca el cambio. Tiempo no fiable para estadistica."
+  },
+  {
+   "start": 52.767,
+   "end": 53.733,
+   "dur": 0.966,
+   "text": "Let it boil for",
+   "markup": "Let it boil for",
+   "italic": [],
+   "words": 4
+  },
+  {
+   "start": 53.733,
+   "end": 54.567,
+   "dur": 0.834,
+   "text": "ten minutes,",
+   "markup": "ten minutes,",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 54.567,
+   "end": 55.4,
+   "dur": 0.833,
+   "text": "then strain it",
+   "markup": "then strain it",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 55.4,
+   "end": 55.767,
+   "dur": 0.367,
+   "text": "out.",
+   "markup": "out.",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 55.767,
+   "end": 56.367,
+   "dur": 0.6,
+   "text": "This wakes your",
+   "markup": "This wakes your",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 56.367,
+   "end": 57.433,
+   "dur": 1.066,
+   "text": "entire system",
+   "markup": "entire system",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 57.433,
+   "end": 59.0,
+   "dur": 1.567,
+   "text": "Your gut is cleaned",
+   "markup": "Your *gut* is cleaned",
+   "italic": [
+    "gut"
+   ],
+   "words": 4
+  },
+  {
+   "start": 59.0,
+   "end": 59.8,
+   "dur": 0.8,
+   "text": "the inflammation",
+   "markup": "the *inflammation*",
+   "italic": [
+    "inflammation"
+   ],
+   "words": 2
+  },
+  {
+   "start": 59.8,
+   "end": 60.3,
+   "dur": 0.5,
+   "text": "calms,",
+   "markup": "calms,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 60.3,
+   "end": 60.9,
+   "dur": 0.6,
+   "text": "and your body",
+   "markup": "and your body",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 60.9,
+   "end": 61.733,
+   "dur": 0.833,
+   "text": "feels lighter",
+   "markup": "feels lighter",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 61.733,
+   "end": 62.467,
+   "dur": 0.734,
+   "text": "and happier.",
+   "markup": "and happier.",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 62.467,
+   "end": 63.367,
+   "dur": 0.9,
+   "text": "this recipe does",
+   "markup": "this recipe does",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 63.367,
+   "end": 63.733,
+   "dur": 0.366,
+   "text": "work,",
+   "markup": "work,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 63.733,
+   "end": 64.767,
+   "dur": 1.034,
+   "text": "but to truly heal",
+   "markup": "but to truly heal",
+   "italic": [],
+   "words": 4
+  },
+  {
+   "start": 64.767,
+   "end": 66.433,
+   "dur": 1.666,
+   "text": "your body from / the inside out,",
+   "markup": "your body from / the inside out,",
+   "italic": [],
+   "words": 6,
+   "nota": "este rango contiene 2+ frases (el detector no separo el corte); el \"/\" marca el cambio. Tiempo no fiable para estadistica."
+  },
+  {
+   "start": 66.433,
+   "end": 67.433,
+   "dur": 1.0,
+   "text": "you need a complete",
+   "markup": "you need a complete",
+   "italic": [],
+   "words": 4
+  },
+  {
+   "start": 67.433,
+   "end": 67.9,
+   "dur": 0.467,
+   "text": "system.",
+   "markup": "system.",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 67.9,
+   "end": 68.5,
+   "dur": 0.6,
+   "text": "That's why I've",
+   "markup": "That's why I've",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 68.5,
+   "end": 69.167,
+   "dur": 0.667,
+   "text": "put together",
+   "markup": "put together",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 69.167,
+   "end": 70.5,
+   "dur": 1.333,
+   "text": "my complete book",
+   "markup": "my complete *book*",
+   "italic": [
+    "book"
+   ],
+   "words": 3
+  },
+  {
+   "start": 70.5,
+   "end": 71.833,
+   "dur": 1.333,
+   "text": "featuring gut-friendly",
+   "markup": "featuring *gut-friendly*",
+   "italic": [
+    "gut-friendly"
+   ],
+   "words": 2
+  },
+  {
+   "start": 71.833,
+   "end": 72.667,
+   "dur": 0.834,
+   "text": "recipes,",
+   "markup": "recipes,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 72.667,
+   "end": 73.4,
+   "dur": 0.733,
+   "text": "healing drink",
+   "markup": "*healing drink*",
+   "italic": [
+    "healing drink"
+   ],
+   "words": 2
+  },
+  {
+   "start": 73.4,
+   "end": 74.167,
+   "dur": 0.767,
+   "text": "formulas,",
+   "markup": "formulas,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 74.167,
+   "end": 75.167,
+   "dur": 1.0,
+   "text": "inflammation-busting",
+   "markup": "inflammation-busting",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 75.167,
+   "end": 75.667,
+   "dur": 0.5,
+   "text": "meals,",
+   "markup": "meals,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 75.667,
+   "end": 76.4,
+   "dur": 0.733,
+   "text": "healthy sweet",
+   "markup": "healthy sweet",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 76.4,
+   "end": 77.0,
+   "dur": 0.6,
+   "text": "treats,",
+   "markup": "treats,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 77.0,
+   "end": 78.167,
+   "dur": 1.167,
+   "text": "daily gut trackers,",
+   "markup": "daily gut trackers,",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 78.167,
+   "end": 78.967,
+   "dur": 0.8,
+   "text": "and strategies",
+   "markup": "and strategies",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 78.967,
+   "end": 79.7,
+   "dur": 0.733,
+   "text": "to slash your",
+   "markup": "to slash your",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 79.7,
+   "end": 80.4,
+   "dur": 0.7,
+   "text": "weekly grocery",
+   "markup": "weekly grocery",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 80.4,
+   "end": 80.767,
+   "dur": 0.367,
+   "text": "bills.",
+   "markup": "bills.",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 80.767,
+   "end": 81.367,
+   "dur": 0.6,
+   "text": "You can grab it",
+   "markup": "You can grab it",
+   "italic": [],
+   "words": 4
+  },
+  {
+   "start": 81.367,
+   "end": 82.067,
+   "dur": 0.7,
+   "text": "directly through",
+   "markup": "*directly* through",
+   "italic": [
+    "directly"
+   ],
+   "words": 2
+  },
+  {
+   "start": 82.067,
+   "end": 82.767,
+   "dur": 0.7,
+   "text": "the link in my",
+   "markup": "the *link* in my",
+   "italic": [
+    "link"
+   ],
+   "words": 4
+  },
+  {
+   "start": 82.767,
+   "end": 84.167,
+   "dur": 1.4,
+   "text": "bio or comment",
+   "markup": "*bio* or *comment*",
+   "italic": [
+    "bio",
+    "comment"
+   ],
+   "words": 3
+  },
+  {
+   "start": 84.167,
+   "end": 84.9,
+   "dur": 0.733,
+   "text": "\"TEA\" and I'll",
+   "markup": "*\"TEA\"* and I'll",
+   "italic": [
+    "\"TEA\""
+   ],
+   "words": 3
+  },
+  {
+   "start": 84.9,
+   "end": 85.667,
+   "dur": 0.767,
+   "text": "send you the full",
+   "markup": "send you the *full*",
+   "italic": [
+    "full"
+   ],
+   "words": 4
+  },
+  {
+   "start": 85.667,
+   "end": 86.567,
+   "dur": 0.9,
+   "text": "book and all my",
+   "markup": "*book* and all my",
+   "italic": [
+    "book"
+   ],
+   "words": 4
+  },
+  {
+   "start": 86.567,
+   "end": 87.533,
+   "dur": 0.966,
+   "text": "health protocols",
+   "markup": "*health protocols*",
+   "italic": [
+    "health protocols"
+   ],
+   "words": 2,
+   "nota": "corregido en GOLD_FIXES.md (1): el rango ya no contiene la frase siguiente; el fin pasa a 87,533 s del reel."
+  },
+  {
+   "start": 87.6,
+   "end": 88.1,
+   "dur": 0.5,
+   "text": "straight to your",
+   "markup": "straight to your",
+   "italic": [],
+   "words": 3,
+   "nota": "añadido en GOLD_FIXES.md (1): faltaba en el gold; tiempos del subtítulo original del clip CTA."
+  },
+  {
+   "start": 88.1,
+   "end": 88.733,
+   "dur": 0.633,
+   "text": "DMs.",
+   "markup": "*DMs.*",
+   "italic": [
+    "DMs."
+   ],
+   "words": 1
+  },
+  {
+   "start": 88.733,
+   "end": 89.233,
+   "dur": 0.5,
+   "text": "Just make sure",
+   "markup": "Just make sure",
+   "italic": [],
+   "words": 3
+  },
+  {
+   "start": 89.233,
+   "end": 89.933,
+   "dur": 0.7,
+   "text": "you're following",
+   "markup": "you're *following*",
+   "italic": [
+    "following"
+   ],
+   "words": 2
+  },
+  {
+   "start": 89.933,
+   "end": 90.7,
+   "dur": 0.767,
+   "text": "me first.",
+   "markup": "me first.",
+   "italic": [],
+   "words": 2
+  },
+  {
+   "start": 90.7,
+   "end": 91.267,
+   "dur": 0.567,
+   "text": "Otherwise,",
+   "markup": "Otherwise,",
+   "italic": [],
+   "words": 1
+  },
+  {
+   "start": 91.267,
+   "end": 92.233,
+   "dur": 0.966,
+   "text": "social media",
+   "markup": "*social media*",
+   "italic": [
+    "social media"
+   ],
+   "words": 2
+  },
+  {
+   "start": 92.233,
+   "end": 93.333,
+   "dur": 1.1,
+   "text": "won't let my message",
+   "markup": "won't let my message",
+   "italic": [],
+   "words": 4
+  },
+  {
+   "start": 93.333,
+   "end": 93.833,
+   "dur": 0.5,
+   "text": "go through.",
+   "markup": "go through.",
+   "italic": [],
+   "words": 2
+  }
+ ]
+}

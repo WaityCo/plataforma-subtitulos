@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34" role="img" aria-label="Click-Flow">
+  <!-- Marca Click-Flow medida en el brand row de Paper: tile de 34, radio 10, gradiente vertical y biseles inset.
+       El cuadrado blanco es el glifo de 14 con borde de 2.5. Sin sombra exterior: el DS no proyecta sombras. -->
+  <defs>
+    <linearGradient id="cf-logo-fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F63C79"/>
+      <stop offset="1" stop-color="#D01053"/>
+    </linearGradient>
+  </defs>
+  <rect width="34" height="34" rx="10" fill="url(#cf-logo-fill)"/>
+  <rect x="0.5" y="0.5" width="33" height="33" rx="9.5" fill="none" stroke="#000000" stroke-opacity="0.14"/>
+  <rect x="1.5" y="1.5" width="31" height="31" rx="8.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.26"/>
+  <rect x="11.25" y="11.25" width="11.5" height="11.5" rx="2.75" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+</svg>

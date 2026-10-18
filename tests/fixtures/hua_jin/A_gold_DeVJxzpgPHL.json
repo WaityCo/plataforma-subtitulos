@@ -1,0 +1,840 @@
+{
+ "video": "DeVJxzpgPHL",
+ "url": "https://www.instagram.com/hua_jin123/reel/DeVJxzpgPHL/",
+ "plays_aprox": 996123,
+ "estilo": "A_editorial_mixto",
+ "nota": "Transcrito a mano leyendo el reel a 4 fps (+ secuencias a 30 fps). Tiempo de aparicion de cada palabra con precision ~0.1-0.25 s. \"t\" = momento en que la palabra empieza su fade-in (dura ~100 ms). El bloque entero desaparece en \"end\" (corte seco). *palabra* = Instrument Serif Italic grande; resto Inter SemiBold. scale_aprox = tamano relativo del bloque estimado a ojo (1.0 = base). En el bloque 20 falta \"send\" (no se alcanzo a ver a 4 fps).",
+ "blocks": [
+  {
+   "start": 0.25,
+   "end": 2.25,
+   "lines_markup": [
+    "This is what *cinnamon*",
+    "does to the *sugar*"
+   ],
+   "scale_aprox": 0.85,
+   "words": [
+    {
+     "t": 0.25,
+     "text": "This",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 0.5,
+     "text": "is",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 0.75,
+     "text": "what",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 0.8,
+     "text": "cinnamon",
+     "italic_serif": true,
+     "line": 0
+    },
+    {
+     "t": 1.25,
+     "text": "does",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 1.5,
+     "text": "to",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 1.75,
+     "text": "the",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 1.85,
+     "text": "sugar",
+     "italic_serif": true,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 2.25,
+   "end": 3.0,
+   "lines_markup": [
+    "in your body."
+   ],
+   "scale_aprox": 1.2,
+   "words": [
+    {
+     "t": 2.25,
+     "text": "in",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 2.3,
+     "text": "your",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 2.5,
+     "text": "body.",
+     "italic_serif": false,
+     "line": 0
+    }
+   ]
+  },
+  {
+   "start": 3.75,
+   "end": 5.0,
+   "lines_markup": [
+    "In a glass of *warm*",
+    "water,"
+   ],
+   "scale_aprox": 1.0,
+   "words": [
+    {
+     "t": 3.75,
+     "text": "In",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 4.0,
+     "text": "a",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 4.05,
+     "text": "glass",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 4.25,
+     "text": "of",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 4.5,
+     "text": "warm",
+     "italic_serif": true,
+     "line": 0
+    },
+    {
+     "t": 4.75,
+     "text": "water,",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 5.0,
+   "end": 6.5,
+   "lines_markup": [
+    "mix one *teaspoon*",
+    "of *cinnamon,*"
+   ],
+   "scale_aprox": 1.0,
+   "words": [
+    {
+     "t": 5.0,
+     "text": "mix",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 5.25,
+     "text": "one",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 5.5,
+     "text": "teaspoon",
+     "italic_serif": true,
+     "line": 0
+    },
+    {
+     "t": 5.75,
+     "text": "of",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 6.0,
+     "text": "cinnamon,",
+     "italic_serif": true,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 6.75,
+   "end": 8.25,
+   "lines_markup": [
+    "a squeeze of fresh",
+    "*lemon* juice,"
+   ],
+   "scale_aprox": 1.0,
+   "words": [
+    {
+     "t": 6.75,
+     "text": "a",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 7.0,
+     "text": "squeeze",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 7.25,
+     "text": "of",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 7.5,
+     "text": "fresh",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 7.75,
+     "text": "lemon",
+     "italic_serif": true,
+     "line": 1
+    },
+    {
+     "t": 8.0,
+     "text": "juice,",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 8.25,
+   "end": 9.75,
+   "lines_markup": [
+    "and one tablespoon",
+    "of raw *honey.*"
+   ],
+   "scale_aprox": 1.0,
+   "words": [
+    {
+     "t": 8.25,
+     "text": "and",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 8.5,
+     "text": "one",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 8.6,
+     "text": "tablespoon",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 9.0,
+     "text": "of",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 9.25,
+     "text": "raw",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 9.5,
+     "text": "honey.",
+     "italic_serif": true,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 9.75,
+   "end": 11.0,
+   "lines_markup": [
+    "*Drink* this every",
+    "*morning* on an"
+   ],
+   "scale_aprox": 1.1,
+   "words": [
+    {
+     "t": 9.75,
+     "text": "Drink",
+     "italic_serif": true,
+     "line": 0
+    },
+    {
+     "t": 10.0,
+     "text": "this",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 10.25,
+     "text": "every",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 10.5,
+     "text": "morning",
+     "italic_serif": true,
+     "line": 1
+    },
+    {
+     "t": 10.75,
+     "text": "on",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 10.8,
+     "text": "an",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 11.0,
+   "end": 11.75,
+   "lines_markup": [
+    "empty stomach."
+   ],
+   "scale_aprox": 1.1,
+   "words": [
+    {
+     "t": 11.0,
+     "text": "empty",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 11.25,
+     "text": "stomach.",
+     "italic_serif": false,
+     "line": 0
+    }
+   ]
+  },
+  {
+   "start": 11.75,
+   "end": 13.25,
+   "lines_markup": [
+    "Your *energy* starts",
+    "coming back,"
+   ],
+   "scale_aprox": 1.0,
+   "words": [
+    {
+     "t": 11.75,
+     "text": "Your",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 12.0,
+     "text": "energy",
+     "italic_serif": true,
+     "line": 0
+    },
+    {
+     "t": 12.25,
+     "text": "starts",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 12.5,
+     "text": "coming",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 12.75,
+     "text": "back,",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 13.25,
+   "end": 14.0,
+   "lines_markup": [
+    "your clothes",
+    "start fitting"
+   ],
+   "scale_aprox": 1.1,
+   "words": [
+    {
+     "t": 13.25,
+     "text": "your",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 13.3,
+     "text": "clothes",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 13.5,
+     "text": "start",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 13.75,
+     "text": "fitting",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 14.0,
+   "end": 15.0,
+   "lines_markup": [
+    "better,",
+    "and you finally"
+   ],
+   "scale_aprox": 1.1,
+   "words": [
+    {
+     "t": 14.0,
+     "text": "better,",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 14.5,
+     "text": "and",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 14.55,
+     "text": "you",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 14.75,
+     "text": "finally",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 15.0,
+   "end": 15.75,
+   "lines_markup": [
+    "start *feeling*",
+    "like yourself"
+   ],
+   "scale_aprox": 1.1,
+   "words": [
+    {
+     "t": 15.0,
+     "text": "start",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 15.25,
+     "text": "feeling",
+     "italic_serif": true,
+     "line": 0
+    },
+    {
+     "t": 15.3,
+     "text": "like",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 15.5,
+     "text": "yourself",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 15.75,
+   "end": 16.25,
+   "lines_markup": [
+    "again."
+   ],
+   "scale_aprox": 1.1,
+   "words": [
+    {
+     "t": 15.75,
+     "text": "again.",
+     "italic_serif": false,
+     "line": 0
+    }
+   ]
+  },
+  {
+   "start": 16.25,
+   "end": 17.75,
+   "lines_markup": [
+    "Nobody can patent",
+    "*cinnamon,*"
+   ],
+   "scale_aprox": 1.0,
+   "words": [
+    {
+     "t": 16.25,
+     "text": "Nobody",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 16.5,
+     "text": "can",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 16.75,
+     "text": "patent",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 17.25,
+     "text": "cinnamon,",
+     "italic_serif": true,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 17.75,
+   "end": 19.0,
+   "lines_markup": [
+    "*lemon,*",
+    "or *honey,*"
+   ],
+   "scale_aprox": 1.1,
+   "words": [
+    {
+     "t": 17.75,
+     "text": "lemon,",
+     "italic_serif": true,
+     "line": 0
+    },
+    {
+     "t": 18.5,
+     "text": "or",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 18.55,
+     "text": "honey,",
+     "italic_serif": true,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 19.0,
+   "end": 20.5,
+   "lines_markup": [
+    "so nobody spends",
+    "millions telling"
+   ],
+   "scale_aprox": 0.9,
+   "words": [
+    {
+     "t": 19.0,
+     "text": "so",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 19.25,
+     "text": "nobody",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 19.5,
+     "text": "spends",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 19.75,
+     "text": "millions",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 20.25,
+     "text": "telling",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 20.5,
+   "end": 21.25,
+   "lines_markup": [
+    "you about them."
+   ],
+   "scale_aprox": 1.1,
+   "words": [
+    {
+     "t": 20.5,
+     "text": "you",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 20.75,
+     "text": "about",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 20.8,
+     "text": "them.",
+     "italic_serif": false,
+     "line": 0
+    }
+   ]
+  },
+  {
+   "start": 21.25,
+   "end": 23.0,
+   "lines_markup": [
+    "This is one of",
+    "53 *remedies* in"
+   ],
+   "scale_aprox": 1.15,
+   "words": [
+    {
+     "t": 21.25,
+     "text": "This",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 21.3,
+     "text": "is",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 21.5,
+     "text": "one",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 21.75,
+     "text": "of",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 22.0,
+     "text": "53",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 22.25,
+     "text": "remedies",
+     "italic_serif": true,
+     "line": 1
+    },
+    {
+     "t": 22.75,
+     "text": "in",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 23.0,
+   "end": 24.25,
+   "lines_markup": [
+    "our Ancient Remedies",
+    "Bible."
+   ],
+   "scale_aprox": 0.85,
+   "words": [
+    {
+     "t": 23.0,
+     "text": "our",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 23.1,
+     "text": "Ancient",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 23.5,
+     "text": "Remedies",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 23.75,
+     "text": "Bible.",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 24.5,
+   "end": 25.25,
+   "lines_markup": [
+    "Comment \"book\"",
+    "and we'll"
+   ],
+   "scale_aprox": 1.0,
+   "words": [
+    {
+     "t": 24.5,
+     "text": "Comment",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 24.75,
+     "text": "\"book\"",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 25.0,
+     "text": "and",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 25.05,
+     "text": "we'll",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  },
+  {
+   "start": 25.25,
+   "end": 25.75,
+   "lines_markup": [
+    "it to you."
+   ],
+   "scale_aprox": 1.1,
+   "words": [
+    {
+     "t": 25.25,
+     "text": "it",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 25.5,
+     "text": "to",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 25.55,
+     "text": "you.",
+     "italic_serif": false,
+     "line": 0
+    }
+   ]
+  },
+  {
+   "start": 26.0,
+   "end": 27.24,
+   "lines_markup": [
+    "Follow us so it",
+    "reaches you."
+   ],
+   "scale_aprox": 1.1,
+   "words": [
+    {
+     "t": 26.0,
+     "text": "Follow",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 26.15,
+     "text": "us",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 26.25,
+     "text": "so",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 26.5,
+     "text": "it",
+     "italic_serif": false,
+     "line": 0
+    },
+    {
+     "t": 26.6,
+     "text": "reaches",
+     "italic_serif": false,
+     "line": 1
+    },
+    {
+     "t": 27.0,
+     "text": "you.",
+     "italic_serif": false,
+     "line": 1
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,154 @@
+{
+ "model": "small",
+ "language": "en",
+ "clip": "clip19",
+ "offset": 19.4,
+ "duration": 8.0,
+ "words": [
+  {
+   "text": "I",
+   "start": 0.0,
+   "end": 0.3
+  },
+  {
+   "text": "have",
+   "start": 0.3,
+   "end": 0.44
+  },
+  {
+   "text": "been",
+   "start": 0.44,
+   "end": 0.58
+  },
+  {
+   "text": "telling",
+   "start": 0.58,
+   "end": 0.82
+  },
+  {
+   "text": "people",
+   "start": 0.82,
+   "end": 1.12
+  },
+  {
+   "text": "this",
+   "start": 1.12,
+   "end": 1.38
+  },
+  {
+   "text": "for",
+   "start": 1.38,
+   "end": 1.6
+  },
+  {
+   "text": "years",
+   "start": 1.6,
+   "end": 2.0
+  },
+  {
+   "text": "and",
+   "start": 2.0,
+   "end": 2.44
+  },
+  {
+   "text": "they",
+   "start": 2.44,
+   "end": 2.56
+  },
+  {
+   "text": "never",
+   "start": 2.56,
+   "end": 2.84
+  },
+  {
+   "text": "believe",
+   "start": 2.84,
+   "end": 3.2
+  },
+  {
+   "text": "me",
+   "start": 3.2,
+   "end": 3.48
+  },
+  {
+   "text": "until",
+   "start": 3.48,
+   "end": 3.86
+  },
+  {
+   "text": "they",
+   "start": 3.86,
+   "end": 4.08
+  },
+  {
+   "text": "try",
+   "start": 4.08,
+   "end": 4.36
+  },
+  {
+   "text": "this",
+   "start": 4.36,
+   "end": 4.66
+  },
+  {
+   "text": "instead.",
+   "start": 4.66,
+   "end": 5.12
+  },
+  {
+   "text": "When",
+   "start": 5.32,
+   "end": 5.4
+  },
+  {
+   "text": "your",
+   "start": 5.4,
+   "end": 5.54
+  },
+  {
+   "text": "gut",
+   "start": 5.54,
+   "end": 5.76
+  },
+  {
+   "text": "has",
+   "start": 5.76,
+   "end": 5.98
+  },
+  {
+   "text": "been",
+   "start": 5.98,
+   "end": 6.12
+  },
+  {
+   "text": "backed",
+   "start": 6.12,
+   "end": 6.42
+  },
+  {
+   "text": "up",
+   "start": 6.42,
+   "end": 6.62
+  },
+  {
+   "text": "for",
+   "start": 6.62,
+   "end": 6.8
+  },
+  {
+   "text": "years,",
+   "start": 6.8,
+   "end": 7.2
+  },
+  {
+   "text": "the",
+   "start": 7.44,
+   "end": 7.52
+  },
+  {
+   "text": "lining",
+   "start": 7.52,
+   "end": 7.86
+  }
+ ]
+}

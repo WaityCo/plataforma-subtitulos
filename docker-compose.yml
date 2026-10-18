@@ -1,0 +1,14 @@
+# Un servicio: API, frontend y worker en el mismo proceso.
+services:
+  subs:
+    build:
+      context: .
+      args:
+        WHISPER_MODEL: small
+        PRELOAD_WHISPER: "1"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Jobs, words.json, subtitles.ass, MP4 y la base SQLite. Es todo el estado de la app.
+      - ./data:/app/data
+    restart: unless-stopped

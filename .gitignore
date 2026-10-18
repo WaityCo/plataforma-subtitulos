@@ -1,0 +1,24 @@
+# Entorno local y caché de Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Datos generados por la app y salidas de las pruebas
+data/
+tests/out/
+
+# macOS
+.DS_Store
+
+# Despliegue en Cloudflare: secretos locales, paquete generado y estado del túnel
+deploy/cloudflare/.secrets.env
+deploy/cloudflare/.secrets.*
+deploy/cloudflare/build/
+deploy/cloudflare/state/
+
+# Herramientas y registros locales
+.wrangler/
+node_modules/
+*.log
+backend/.venv-dev/

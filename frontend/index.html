@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Subtítulos · Click-Flow</title>
+  <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+  <!-- Versión de css y js. Al cambiar uno, sube ?v= aquí, en el importmap y en el script del final. -->
+  <link rel="stylesheet" href="/css/tokens.css?v=20261017">
+  <link rel="stylesheet" href="/css/components.css?v=20261017">
+  <link rel="stylesheet" href="/css/app.css?v=20261017">
+  <!-- Base del backend (config.js). Va antes que los módulos. -->
+  <script src="/config.js"></script>
+  <!-- Los módulos se importan sin versión; el importmap añade ?v= para que la caché larga de /js/ sea segura. -->
+  <script type="importmap">
+    {
+      "imports": {
+        "/js/api.js": "/js/api.js?v=20261017",
+        "/js/controls.js": "/js/controls.js?v=20261017",
+        "/js/dom.js": "/js/dom.js?v=20261017",
+        "/js/fonts.js": "/js/fonts.js?v=20261017",
+        "/js/hook.js": "/js/hook.js?v=20261017",
+        "/js/icons.js": "/js/icons.js?v=20261017",
+        "/js/overlay.js": "/js/overlay.js?v=20261017",
+        "/js/pages/editor.js": "/js/pages/editor.js?v=20261017",
+        "/js/pages/exporter.js": "/js/pages/exporter.js?v=20261017",
+        "/js/pages/nuevo.js": "/js/pages/nuevo.js?v=20261017",
+        "/js/pages/presets.js": "/js/pages/presets.js?v=20261017",
+        "/js/pages/words.js": "/js/pages/words.js?v=20261017",
+        "/js/presets.js": "/js/presets.js?v=20261017",
+        "/js/recents.js": "/js/recents.js?v=20261017",
+        "/js/router.js": "/js/router.js?v=20261017",
+        "/js/shell.js": "/js/shell.js?v=20261017",
+        "/js/style.js": "/js/style.js?v=20261017"
+      }
+    }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#view">Saltar al contenido</a>
+
+  <div class="app">
+    <aside class="cf-sidebar app__sidebar" id="sidebar" aria-label="Menú principal">
+      <div class="cf-brand">
+        <img class="cf-brand__logo" src="/assets/logo.svg" width="34" height="34" alt="Click-Flow">
+        <div class="cf-brand__text">
+          <span class="cf-brand__name">Click-Flow</span>
+          <span class="cf-brand__by">Subtítulos</span>
+        </div>
+      </div>
+
+      <label class="cf-sidebar__search">
+        <span data-icon="search"></span>
+        <input id="search" type="search" placeholder="Buscar" autocomplete="off" aria-label="Buscar en el menú">
+        <span class="cf-kbd" aria-hidden="true">/</span>
+      </label>
+
+      <nav class="app__nav" aria-label="Principal">
+        <div class="cf-nav">
+          <span class="cf-group-label">Essentials</span>
+          <a class="cf-nav__item" href="#/nuevo" data-route="nuevo" data-search="Nuevo video">
+            <span data-icon="upload"></span>Nuevo video
+          </a>
+          <span class="cf-nav__item app__static" data-search="Proyectos recientes">
+            <span data-icon="clock"></span>Proyectos recientes
+          </span>
+          <div class="app__recent" id="recent"></div>
+          <div class="cf-divider"></div>
+          <span class="cf-group-label">Estilos</span>
+          <a class="cf-nav__item" href="#/presets" data-route="presets" data-search="Presets">
+            <span data-icon="palette"></span>Presets
+          </a>
+        </div>
+      </nav>
+
+      <div class="cf-sidebar__foot">
+        <button class="cf-nav__item app__help" id="help-btn" type="button" data-search="Ayuda">
+          <span data-icon="help"></span>Ayuda
+        </button>
+      </div>
+    </aside>
+
+    <div class="app__scrim" id="scrim" hidden></div>
+
+    <main class="app__main" id="main">
+      <header class="app__topbar">
+        <button class="cf-btn cf-btn--white cf-btn--32" id="menu-btn" type="button" aria-expanded="false" aria-controls="sidebar" aria-label="Abrir menú">
+          <span data-icon="menu"></span>
+        </button>
+        <span class="t-label t-soft">Subtítulos</span>
+      </header>
+      <div class="app__content" id="view" tabindex="-1"></div>
+    </main>
+  </div>
+
+  <dialog class="app__help-dialog" id="help-dialog" aria-labelledby="help-title">
+    <h2 class="t-card" id="help-title">Cómo funciona</h2>
+    <ol class="app__steps">
+      <li>Sube un video vertical (mp4, mov o webm<span data-max-upload-hint></span>) en Nuevo video.</li>
+      <li>Al terminar la transcripción se abre el editor: elige un preset y ajusta tipografía, color, sombra, posición, ritmo y énfasis.</li>
+      <li>Corrige palabras y énfasis. Guardar regenera los subtítulos sin volver a transcribir.</li>
+      <li>Exporta una preview de 6 s o el render final, y descarga el MP4 o el .ass.</li>
+    </ol>
+    <p class="t-micro t-muted">Atajo: <span class="cf-kbd" aria-hidden="true">/</span> busca en el menú.</p>
+    <div class="app__help-actions">
+      <button class="cf-btn cf-btn--white cf-btn--32" type="button" data-close>Cerrar</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="/js/app.js?v=20261017"></script>
+</body>
+</html>

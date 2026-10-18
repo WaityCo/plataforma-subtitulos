@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Click-Flow · galería del DS (01, 02, 04)</title>
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <style>
+    /* Layout de esta galería. No es parte del DS. */
+    html, body { margin: 0; background: var(--cf-color-canvas); }
+    body { color: var(--cf-color-ink); font-family: var(--cf-font-sans); }
+    [data-icon] { display: inline-flex; flex: 0 0 auto; }
+    .gal { box-sizing: border-box; width: 1160px; margin: 0 auto; padding: 40px 0 96px; }
+    .gal section { margin: 0 -40px; padding: 0 40px 56px; }
+    .gal h2, .gal h3, .gal h4, .gal p { margin: 0; }
+    .gal h3 { margin-top: 40px; margin-bottom: 16px; }
+    .lead { margin-top: 4px; color: var(--cf-color-ink-muted); font: 400 var(--cf-text-body) / var(--cf-lh-body) var(--cf-font-sans); }
+    .spec { color: var(--cf-color-ink-muted); font: 400 var(--cf-text-micro) / var(--cf-lh-micro) var(--cf-font-sans); }
+    .grid { display: grid; gap: 16px; }
+    .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .g5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .g8 { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+    .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .sw__chip { height: 48px; border-radius: var(--cf-radius-xs); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); }
+    .sw__grad { height: 48px; border-radius: var(--cf-radius-xs); }
+    .card { background: var(--cf-color-surface); border-radius: var(--cf-radius-card); }
+    .pad-20 { padding: 20px; }
+    .pad-16 { padding: 16px; }
+    .spec-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; padding: 14px 0; box-shadow: var(--cf-bevel-groove); border-top: 1px solid var(--cf-color-border); }
+    .frame { background: var(--cf-color-surface); border-radius: var(--cf-radius-card); }
+    .tile-cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .ring-box { width: 64px; height: 64px; background: var(--cf-color-surface); box-shadow: var(--cf-ring-border); }
+    .sp-bar { height: 12px; background: var(--cf-color-ink); border-radius: var(--cf-radius-xs); }
+    .sidebar-box { width: 268px; height: 600px; }
+    .cell-metric { display: flex; flex-direction: column; gap: 6px; }
+    .job-list { display: flex; flex-direction: column; gap: 12px; }
+    .job-row { display: grid; grid-template-columns: 200px 1fr 120px; align-items: center; gap: 24px; height: 72px; padding: 0 20px; border-radius: var(--cf-radius-card); background: var(--cf-color-surface); }
+    .table-head { display: grid; grid-template-columns: 200px 1fr 120px; gap: 24px; padding: 0 20px 8px; }
+    .table-head span { color: var(--cf-color-ink-muted); font: 400 var(--cf-text-micro) / var(--cf-lh-micro) var(--cf-font-sans); }
+    .ticks-wrap { width: 100%; }
+    .marks-wrap { width: 216px; }
+    .job-row .spec-main { font: 500 var(--cf-text-body) / 20px var(--cf-font-sans); color: var(--cf-color-ink); }
+    .dropzone-wrap { width: 100%; }
+    .state-head { font: 400 var(--cf-text-micro) / var(--cf-lh-micro) var(--cf-font-sans); color: var(--cf-color-ink-muted); text-align: center; }
+    .state-cell { display: flex; align-items: center; justify-content: center; min-height: 68px; }
+    .state-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; align-items: center; }
+    .kpi-anno { display: grid; gap: 4px; }
+    .radius-list { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+    .gal-foot { margin-top: 24px; }
+  </style>
+</head>
+<body>
+<main class="gal">
+
+  <!-- 01 Foundations -->
+  <section id="sec-01" data-section="01-foundations">
+    <p class="t-micro t-muted">01 · Foundations</p>
+    <h2 class="t-page">Color, tipografía, superficies y espacio</h2>
+    <p class="lead">Modo claro. Mismo orden que la página 01 de Paper.</p>
+
+    <h3 class="t-card">01.1 Color</h3>
+    <p class="spec">Neutrales</p>
+    <div class="grid g5" style="margin-top: 8px;">
+      <div class="col"><div class="sw__chip" style="background: var(--cf-color-canvas)"></div><span class="t-micro">canvas</span><span class="spec">#F3F3F3</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-color-surface)"></div><span class="t-micro">surface</span><span class="spec">#FFFFFF</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-color-surface-sunken)"></div><span class="t-micro">surface-sunken</span><span class="spec">#EDEDED</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-color-surface-hover)"></div><span class="t-micro">surface-hover</span><span class="spec">#F2F2F2</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-color-border)"></div><span class="t-micro">border</span><span class="spec">#E9E9E9</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-color-border-strong)"></div><span class="t-micro">border-strong</span><span class="spec">#DCDCDC</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-color-ink-faint)"></div><span class="t-micro">ink-faint</span><span class="spec">#9E9EA4</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-color-ink-muted)"></div><span class="t-micro">ink-muted</span><span class="spec">#6E6E73</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-color-ink-soft)"></div><span class="t-micro">ink-soft</span><span class="spec">#45464B</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-color-ink)"></div><span class="t-micro">ink</span><span class="spec">#151517</span></div>
+    </div>
+
+    <p class="spec" style="margin-top: 24px;">Pigmentos de datos: planos para leyendas y puntos; gradiente para lo que mide</p>
+    <div class="grid g8" style="margin-top: 8px;">
+      <div class="col"><div class="sw__chip" style="background: var(--cf-data-1)"></div><span class="t-micro">data-1</span><span class="spec">cornflower #5585F0</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-data-2)"></div><span class="t-micro">data-2</span><span class="spec">cadmium #F1854B</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-data-3)"></div><span class="t-micro">data-3</span><span class="spec">viridian #2AAE8E</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-data-4)"></div><span class="t-micro">data-4</span><span class="spec">cobalt violet #9B72F0</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-data-5)"></div><span class="t-micro">data-5</span><span class="spec">coral #F0665F</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-data-6)"></div><span class="t-micro">data-6</span><span class="spec">sap green #37BE6A</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-data-7)"></div><span class="t-micro">data-7</span><span class="spec">cerulean #2AA8E8</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-data-8)"></div><span class="t-micro">data-8</span><span class="spec">payne #7D8899</span></div>
+    </div>
+    <div class="grid g8" style="margin-top: 12px;">
+      <div class="col"><div class="sw__grad" style="background: var(--cf-grad-data-1)"></div><span class="spec">#6591F1 → #4579EF</span></div>
+      <div class="col"><div class="sw__grad" style="background: var(--cf-grad-data-2)"></div><span class="spec">#F2905C → #F07A3A</span></div>
+      <div class="col"><div class="sw__grad" style="background: var(--cf-grad-data-3)"></div><span class="spec">#2DBC9A → #27A082</span></div>
+      <div class="col"><div class="sw__grad" style="background: var(--cf-grad-data-4)"></div><span class="spec">#A682F2 → #9062EE</span></div>
+      <div class="col"><div class="sw__grad" style="background: var(--cf-grad-data-5)"></div><span class="spec">#F2766F → #EE564F</span></div>
+      <div class="col"><div class="sw__grad" style="background: var(--cf-grad-data-6)"></div><span class="spec">#3FC873 → #33B062</span></div>
+      <div class="col"><div class="sw__grad" style="background: var(--cf-grad-data-7)"></div><span class="spec">#3AAFEA → #1AA1E6</span></div>
+      <div class="col"><div class="sw__grad" style="background: var(--cf-grad-data-8)"></div><span class="spec">#8791A1 → #737F91</span></div>
+    </div>
+
+    <p class="spec" style="margin-top: 24px;">Secuencial: una variable, nunca categorías</p>
+    <div class="grid g5" style="margin-top: 8px;">
+      <div class="col"><div class="sw__chip" style="background: var(--cf-seq-1)"></div><span class="t-micro">seq-1</span><span class="spec">#DCE6FD</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-seq-2)"></div><span class="t-micro">seq-2</span><span class="spec">#B3C6FA</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-seq-3)"></div><span class="t-micro">seq-3</span><span class="spec">#85A3F5</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-seq-4)"></div><span class="t-micro">seq-4</span><span class="spec">#5585F0</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-seq-5)"></div><span class="t-micro">seq-5</span><span class="spec">#3260CE</span></div>
+    </div>
+
+    <p class="spec" style="margin-top: 24px;">Semánticos: punto sólido más texto</p>
+    <div class="grid g2" style="margin-top: 8px;">
+      <div class="row"><span class="cf-dot cf-dot--success"></span><span class="t-micro">success</span><span class="spec">#529C58 (variable de Paper)</span></div>
+      <div class="row"><span class="cf-dot cf-dot--warning"></span><span class="t-micro">warning</span><span class="spec">#B4690E</span></div>
+      <div class="row"><span class="cf-dot cf-dot--danger"></span><span class="t-micro">danger</span><span class="spec">#BC4F4C (variable de Paper)</span></div>
+      <div class="row"><span class="cf-dot cf-dot--info"></span><span class="t-micro">info</span><span class="spec">#2563C9</span></div>
+    </div>
+
+    <p class="spec" style="margin-top: 24px;">Brand: solo para el logo. Aquí se muestra como documentación.</p>
+    <div class="grid g5" style="margin-top: 8px;">
+      <div class="col"><div class="sw__chip" style="background: var(--cf-brand-300)"></div><span class="t-micro">brand-300</span><span class="spec">#FF93B5</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-brand-400)"></div><span class="t-micro">brand-400</span><span class="spec">#F85C8E</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-brand-500)"></div><span class="t-micro">brand-500</span><span class="spec">#E51459</span></div>
+      <div class="col"><div class="sw__chip" style="background: var(--cf-brand-600)"></div><span class="t-micro">brand-600</span><span class="spec">#C80E4B</span></div>
+      <div class="col"><img src="/assets/logo.svg" width="34" height="34" alt="Click-Flow" style="margin-top: 7px;"><span class="t-micro">logo</span><span class="spec">tile 34 · gradiente F63C79 → D01053</span></div>
+    </div>
+
+    <h3 class="t-card">01.2 Tipografía</h3>
+    <p class="spec">SF Pro. Text por debajo de 20 px, Display desde 20 px.</p>
+    <div style="margin-top: 8px;">
+      <div class="spec-row"><span class="t-display t-ink">$124,800</span><span class="spec">text-display · 38 / 44 · 500 · −0.03em</span></div>
+      <div class="spec-row"><span class="t-metric t-ink">24,815</span><span class="spec">text-metric · 30 / 36 · 500 · −0.03em</span></div>
+      <div class="spec-row"><span class="t-page t-ink">Overview</span><span class="spec">text-page · 21 / 28 · 500</span></div>
+      <div class="spec-row"><span class="t-section t-ink">Performance</span><span class="spec">text-section · 18 / 24 · 400</span></div>
+      <div class="spec-row"><span class="t-card t-ink">Attributed revenue</span><span class="spec">text-card · 16 / 22 · 500 · −0.01em</span></div>
+      <div class="spec-row"><span class="t-ui t-ink">Campaigns</span><span class="spec">text-ui · 15 / 22 · 400</span></div>
+      <div class="spec-row"><span class="t-body t-soft">Covers 0 of 22 pending approvals</span><span class="spec">text-body · 14 / 20 · 400</span></div>
+      <div class="spec-row"><span class="t-label t-muted">Essentials</span><span class="spec">text-label · 13 / 18 · 400</span></div>
+      <div class="spec-row"><span class="t-micro t-muted">48 creators</span><span class="spec">text-micro · 12 / 16 · 400 · sentence case</span></div>
+    </div>
+
+    <h3 class="t-card">01.3 Superficies</h3>
+    <p class="spec">Tres recetas y ninguna más. Un contenedor es un relleno: sin borde y sin sombra.</p>
+    <div class="grid g3" style="margin-top: 8px;">
+      <div class="col">
+        <div class="card" style="height: 120px;"></div>
+        <span class="t-micro">Card sobre el canvas</span>
+        <span class="spec">radio 12, blanca, sin borde ni sombra</span>
+      </div>
+      <div class="col">
+        <div class="card pad-16" style="height: 120px;"><div class="cf-panel" style="height: 88px;"></div></div>
+        <span class="t-micro">Panel contra otra superficie</span>
+        <span class="spec">relleno sobre relleno, radio 12</span>
+      </div>
+      <div class="col">
+        <div class="card pad-16" style="height: 120px; display: flex; align-items: center;"><input class="cf-control cf-input" placeholder="Nombre del canal" aria-label="Control de ejemplo"></div>
+        <span class="t-micro">Control</span>
+        <span class="spec">alto 36, radio 8, anillo 0 0 0 1px #DCDCDC</span>
+      </div>
+    </div>
+
+    <h3 class="t-card">01.4 Espacio, radio y carriles</h3>
+    <p class="spec">Grilla de 4 px. El radio depende del tamaño de la cosa.</p>
+    <div class="col" style="margin-top: 8px; gap: 6px;">
+      <div class="row"><span class="spec" style="width: 120px;">--cf-space-1 · 4</span><span style="width: var(--cf-space-1); height: 12px; background: var(--cf-color-ink);"></span></div>
+      <div class="row"><span class="spec" style="width: 120px;">--cf-space-2 · 8</span><span style="width: var(--cf-space-2); height: 12px; background: var(--cf-color-ink);"></span></div>
+      <div class="row"><span class="spec" style="width: 120px;">--cf-space-3 · 12</span><span style="width: var(--cf-space-3); height: 12px; background: var(--cf-color-ink);"></span></div>
+      <div class="row"><span class="spec" style="width: 120px;">--cf-space-4 · 16</span><span style="width: var(--cf-space-4); height: 12px; background: var(--cf-color-ink);"></span></div>
+      <div class="row"><span class="spec" style="width: 120px;">--cf-space-5 · 20</span><span style="width: var(--cf-space-5); height: 12px; background: var(--cf-color-ink);"></span></div>
+      <div class="row"><span class="spec" style="width: 120px;">--cf-space-6 · 24</span><span style="width: var(--cf-space-6); height: 12px; background: var(--cf-color-ink);"></span></div>
+      <div class="row"><span class="spec" style="width: 120px;">--cf-space-8 · 32</span><span style="width: var(--cf-space-8); height: 12px; background: var(--cf-color-ink);"></span></div>
+      <div class="row"><span class="spec" style="width: 120px;">--cf-space-10 · 40</span><span style="width: var(--cf-space-10); height: 12px; background: var(--cf-color-ink);"></span></div>
+      <div class="row"><span class="spec" style="width: 120px;">--cf-space-12 · 48</span><span style="width: var(--cf-space-12); height: 12px; background: var(--cf-color-ink);"></span></div>
+    </div>
+    <div class="radius-list" style="margin-top: 24px;">
+      <div class="col tile-cell"><span class="ring-box" style="border-radius: var(--cf-radius-xs);"></span><span class="t-micro">xs 6</span><span class="spec">badge, swatch</span></div>
+      <div class="col tile-cell"><span class="ring-box" style="border-radius: var(--cf-radius-control);"></span><span class="t-micro">control 8</span><span class="spec">botón, input, nav</span></div>
+      <div class="col tile-cell"><span class="ring-box" style="border-radius: var(--cf-radius-group);"></span><span class="t-micro">group 10</span><span class="spec">rail, track</span></div>
+      <div class="col tile-cell"><span class="ring-box" style="border-radius: var(--cf-radius-card);"></span><span class="t-micro">card 12</span><span class="spec">cada card y panel</span></div>
+      <div class="col tile-cell"><span class="ring-box" style="border-radius: var(--cf-radius-pill);"></span><span class="t-micro">pill 999</span><span class="spec">punto, chip de datos</span></div>
+      <div class="col tile-cell"><span class="ring-box" style="border-radius: var(--cf-radius-tile);"></span><span class="t-micro">tile 8</span><span class="spec">icon tile de 32</span></div>
+    </div>
+    <div class="col" style="margin-top: 24px; gap: 8px;">
+      <div class="row"><span class="spec" style="width: 120px;">rail 72</span><span style="width: var(--cf-rail); height: 12px; background: var(--cf-color-ink-faint);"></span></div>
+      <div class="row"><span class="spec" style="width: 120px;">sidebar 268</span><span style="width: var(--cf-sidebar); height: 12px; background: var(--cf-color-ink-faint);"></span></div>
+      <div class="row"><span class="spec" style="width: 120px;">content 1160</span><span style="width: var(--cf-content-max); max-width: 100%; height: 12px; background: var(--cf-color-ink-faint);"></span></div>
+    </div>
+  </section>
+
+  <!-- 02 Components -->
+  <section id="sec-02" data-section="02-components">
+    <p class="t-micro t-muted">02 · Components</p>
+    <h2 class="t-page">Botones, tiles, chips, nav, KPI y filas</h2>
+    <p class="lead">Alto de control 36. Cada componente con sus estados.</p>
+
+    <h3 class="t-card">02.1 Botones</h3>
+    <p class="spec">Alto 36, radio 8, 14 / 500. El relleno es el bisel: gradiente y, en el ink, dos anillos inset.</p>
+    <div class="row" style="margin-top: 12px; align-items: flex-end;">
+      <div class="col"><button class="cf-btn cf-btn--white cf-btn--28">Review</button><span class="spec">28 en filas</span></div>
+      <div class="col"><button class="cf-btn cf-btn--white cf-btn--32">Open queue</button><span class="spec">32 en cards</span></div>
+      <div class="col"><button class="cf-btn cf-btn--white">Review applications</button><span class="spec">36 por defecto</span></div>
+      <div class="col"><button class="cf-btn cf-btn--ink cf-btn--40">Publish</button><span class="spec">40 acción de página, ink porque publica</span></div>
+    </div>
+    <div class="row" style="margin-top: 16px; align-items: flex-end;">
+      <div class="col"><button class="cf-btn cf-btn--ink">Add funds</button><span class="spec">ink: crea o gasta</span></div>
+      <div class="col"><button class="cf-btn cf-btn--white">Export</button><span class="spec">blanco: solo navega</span></div>
+      <div class="col"><button class="cf-btn cf-btn--ghost">Skip</button><span class="spec">ghost</span></div>
+    </div>
+
+    <p class="spec" style="margin-top: 28px;">Estados, como en Paper: ink en default, hover y pressed; blanco en focus y saving</p>
+    <div class="state-grid" style="margin-top: 8px;">
+      <span class="state-head">Default</span>
+      <span class="state-head">Hover</span>
+      <span class="state-head">Pressed</span>
+      <span class="state-head">Focus</span>
+      <span class="state-head">Disabled</span>
+      <span class="state-head">Saving</span>
+
+      <div class="state-cell"><button class="cf-btn cf-btn--ink">Add funds</button></div>
+      <div class="state-cell"><button class="cf-btn cf-btn--ink is-hover">Add funds</button></div>
+      <div class="state-cell"><button class="cf-btn cf-btn--ink is-pressed">Add funds</button></div>
+      <div class="state-cell"><button class="cf-btn cf-btn--white is-focus">Export</button></div>
+      <div class="state-cell"><button class="cf-btn cf-btn--ink" disabled>Add funds</button></div>
+      <div class="state-cell"><button class="cf-btn cf-btn--white is-saving">Saving</button></div>
+    </div>
+
+    <h3 class="t-card">02.2 Icon tiles</h3>
+    <p class="spec">32 px, radio 8. El color nombra la categoría y es el único color de la card.</p>
+    <div class="grid g8" style="margin-top: 12px;">
+      <div class="tile-cell"><span class="cf-tile cf-tile--1" data-icon="upload"></span><span class="spec">data-1</span></div>
+      <div class="tile-cell"><span class="cf-tile cf-tile--2" data-icon="film"></span><span class="spec">data-2</span></div>
+      <div class="tile-cell"><span class="cf-tile cf-tile--3" data-icon="folder"></span><span class="spec">data-3</span></div>
+      <div class="tile-cell"><span class="cf-tile cf-tile--4" data-icon="palette"></span><span class="spec">data-4</span></div>
+      <div class="tile-cell"><span class="cf-tile cf-tile--5" data-icon="alert"></span><span class="spec">data-5</span></div>
+      <div class="tile-cell"><span class="cf-tile cf-tile--6" data-icon="check"></span><span class="spec">data-6</span></div>
+      <div class="tile-cell"><span class="cf-tile cf-tile--neutral" data-icon="help"></span><span class="spec">neutral</span></div>
+      <div class="tile-cell"><span class="cf-tile cf-tile--white" data-icon="clock"></span><span class="spec">white, en celda</span></div>
+    </div>
+
+    <p class="spec" style="margin-top: 24px;">Iconos lineales de 18 px, trazo 1.5, color por currentColor</p>
+    <div class="grid g8" style="margin-top: 8px;">
+      <div class="tile-cell"><span data-icon="upload"></span><span class="spec">upload</span></div>
+      <div class="tile-cell"><span data-icon="film"></span><span class="spec">film</span></div>
+      <div class="tile-cell"><span data-icon="folder"></span><span class="spec">folder</span></div>
+      <div class="tile-cell"><span data-icon="clock"></span><span class="spec">clock</span></div>
+      <div class="tile-cell"><span data-icon="palette"></span><span class="spec">palette</span></div>
+      <div class="tile-cell"><span data-icon="help"></span><span class="spec">help</span></div>
+      <div class="tile-cell"><span data-icon="search"></span><span class="spec">search</span></div>
+      <div class="tile-cell"><span data-icon="play"></span><span class="spec">play</span></div>
+      <div class="tile-cell"><span data-icon="download"></span><span class="spec">download</span></div>
+      <div class="tile-cell"><span data-icon="check"></span><span class="spec">check</span></div>
+      <div class="tile-cell"><span data-icon="alert"></span><span class="spec">alert</span></div>
+      <div class="tile-cell"><span data-icon="chevron"></span><span class="spec">chevron</span></div>
+      <div class="tile-cell"><span data-icon="type"></span><span class="spec">type</span></div>
+      <div class="tile-cell"><span data-icon="sparkle"></span><span class="spec">sparkle</span></div>
+      <div class="tile-cell"><span data-icon="droplet"></span><span class="spec">droplet</span></div>
+      <div class="tile-cell"><span data-icon="align"></span><span class="spec">align</span></div>
+      <div class="tile-cell"><span data-icon="wand"></span><span class="spec">wand</span></div>
+    </div>
+
+    <h3 class="t-card">02.3 Chips, contadores, estado y delta</h3>
+    <p class="spec">El estado es un punto de 8 px más palabras. Nunca un bloque pastel.</p>
+    <div class="row" style="margin-top: 12px;">
+      <span class="cf-chip">51%</span>
+      <span class="cf-chip cf-chip--outline">Draft</span>
+      <span class="cf-counter">48</span>
+      <span class="cf-legend" aria-pressed="false"><span class="cf-dot cf-dot--info"></span>Delivered</span>
+      <span class="cf-legend" aria-pressed="true">Selected</span>
+    </div>
+    <div class="row" style="margin-top: 16px; gap: 24px;">
+      <span class="cf-status"><span class="cf-dot cf-dot--info"></span>Procesando</span>
+      <span class="cf-status"><span class="cf-dot cf-dot--info"></span>Transcribiendo</span>
+      <span class="cf-status"><span class="cf-dot cf-dot--success"></span>Listo</span>
+      <span class="cf-status"><span class="cf-dot cf-dot--info"></span>Renderizando</span>
+      <span class="cf-status"><span class="cf-dot cf-dot--success"></span>Terminado</span>
+      <span class="cf-status"><span class="cf-dot cf-dot--danger"></span>Error</span>
+    </div>
+    <div class="row" style="margin-top: 16px; gap: 24px;">
+      <span class="cf-delta"><span class="cf-delta__glyph"></span>+24.1%</span>
+      <span class="cf-delta cf-delta--down"><span class="cf-delta__glyph"></span>−0.4</span>
+      <span class="cf-delta cf-delta--flat"><span class="cf-delta__glyph"></span>No change</span>
+    </div>
+
+    <h3 class="t-card">02.4 KPI card</h3>
+    <p class="spec">Header 62, hairline de 1 px de borde a borde, body 90. Solo cambia la superficie.</p>
+    <div class="grid g3" style="margin-top: 12px;">
+      <article class="cf-kpi">
+        <header class="cf-kpi__head"><span class="cf-tile cf-tile--1" data-icon="sparkle"></span><h4 class="cf-kpi__title">Saldo de transcripción</h4></header>
+        <div class="cf-kpi__rule"></div>
+        <div class="cf-kpi__body">
+          <div class="cf-kpi__row"><p class="cf-kpi__metric">$14.00</p><button class="cf-btn cf-btn--ink">Add funds</button></div>
+          <p class="cf-kpi__caption">Cubre 0 de 22 trabajos pendientes</p>
+        </div>
+      </article>
+      <article class="cf-kpi">
+        <header class="cf-kpi__head"><span class="cf-tile cf-tile--2" data-icon="film"></span><h4 class="cf-kpi__title">Renders en cola</h4></header>
+        <div class="cf-kpi__rule"></div>
+        <div class="cf-kpi__body">
+          <div class="cf-kpi__row"><p class="cf-kpi__metric">07</p><button class="cf-btn cf-btn--white">Open queue</button></div>
+          <p class="cf-kpi__caption">2 vencen hoy</p>
+        </div>
+      </article>
+      <article class="cf-kpi">
+        <header class="cf-kpi__head"><span class="cf-tile cf-tile--6" data-icon="check"></span><h4 class="cf-kpi__title">Videos terminados</h4></header>
+        <div class="cf-kpi__rule"></div>
+        <div class="cf-kpi__body">
+          <div class="cf-kpi__row"><p class="cf-kpi__metric">1,284</p><button class="cf-btn cf-btn--white">View report</button></div>
+          <p class="cf-kpi__caption"><span class="cf-delta"><span class="cf-delta__glyph"></span>+24.1%</span>vs 1,035</p>
+        </div>
+      </article>
+    </div>
+
+    <h3 class="t-card">02.5 Sidebar</h3>
+    <p class="spec">Fondo canvas con borde derecho de 1 px. Brand de 66, búsqueda hundida de 36, items de 34 con paso de 38.</p>
+    <div class="sidebar-box" style="margin-top: 12px;">
+      <aside class="cf-sidebar">
+        <div class="cf-brand">
+          <img class="cf-brand__logo" src="/assets/logo.svg" width="34" height="34" alt="">
+          <div class="cf-brand__text"><span class="cf-brand__name">Click-Flow</span><span class="cf-brand__by">Subtítulos</span></div>
+        </div>
+        <label class="cf-sidebar__search"><span data-icon="search"></span><input type="search" placeholder="Buscar" aria-label="Buscar"><span class="cf-kbd">/</span></label>
+        <nav class="cf-nav">
+          <span class="cf-group-label">Essentials</span>
+          <a class="cf-nav__item" href="#" aria-current="page"><span data-icon="upload"></span>Nuevo video</a>
+          <a class="cf-nav__item" href="#"><span data-icon="clock"></span>Proyectos recientes</a>
+          <div class="cf-divider"></div>
+          <span class="cf-group-label">Estilos</span>
+          <a class="cf-nav__item" href="#"><span data-icon="palette"></span>Presets</a>
+        </nav>
+        <div class="cf-sidebar__foot">
+          <a class="cf-nav__item" href="#"><span data-icon="help"></span>Ayuda</a>
+        </div>
+      </aside>
+    </div>
+
+    <h3 class="t-card">02.6 Filter bar</h3>
+    <p class="spec">El chip de fecha va suelto. Los filtros van en un track gris con chips de 26; el seleccionado va blanco.</p>
+    <div class="row" style="margin-top: 12px; gap: 12px;">
+      <span class="cf-datechip"><span data-icon="clock"></span>Últimos 30 días</span>
+      <div class="cf-track" role="tablist" aria-label="Idioma">
+        <button class="cf-track__chip" role="tab" aria-selected="true">Auto</button>
+        <button class="cf-track__chip" role="tab" aria-selected="false">ES</button>
+        <button class="cf-track__chip" role="tab" aria-selected="false">EN</button>
+      </div>
+    </div>
+
+    <h3 class="t-card">02.7 Fila de tabla y progreso</h3>
+    <p class="spec">Sin card contenedora. Las etiquetas van sobre el canvas; cada fila es una card blanca de 72, separada 8.</p>
+    <div class="col" style="margin-top: 12px; gap: 8px;">
+      <div class="table-head"><span>Video</span><span>Progreso</span><span>Estado</span></div>
+      <div class="job-list">
+        <div class="job-row">
+          <span class="spec-main">Demo 01 · 9:16</span>
+          <div class="ticks-wrap cf-ticks" data-ticks="100" data-stages="1:42,2:28,3:17,4:13"></div>
+          <span class="cf-status"><span class="cf-dot cf-dot--info"></span>Transcribiendo</span>
+        </div>
+        <div class="job-row">
+          <span class="spec-main">Demo 02 · 9:16</span>
+          <div class="ticks-wrap cf-ticks" data-ticks="100" data-stages="1:100"></div>
+          <span class="cf-status"><span class="cf-dot cf-dot--success"></span>Terminado</span>
+        </div>
+      </div>
+    </div>
+    <p class="spec" style="margin-top: 20px;">Marcas de 5.5 × 22, paso de 8. Lo vacío es #DEDEDE.</p>
+    <div class="marks-wrap cf-marks" data-marks="27" data-stages="1:16" style="margin-top: 8px;"></div>
+
+    <h3 class="t-card">02.8 Separadores</h3>
+    <p class="spec">Groove sobre panel hundido, con 24 de sangría. Hairline sobre card blanca.</p>
+    <div class="grid g2" style="margin-top: 12px;">
+      <div class="cf-panel" style="padding: 12px 0;">
+        <div class="cf-groove" style="margin-top: 8px;"></div>
+        <div class="row" style="padding: 12px 24px; justify-content: space-between;"><span class="t-body t-soft">Briefed</span><span class="t-body t-ink">1,284</span></div>
+        <div class="cf-groove"></div>
+        <div class="row" style="padding: 12px 24px; justify-content: space-between;"><span class="t-body t-soft">Script approved</span><span class="t-body t-ink">1,046</span></div>
+        <div class="cf-groove"></div>
+      </div>
+      <div class="card" style="padding: 12px 0;">
+        <div class="row" style="padding: 12px 20px; justify-content: space-between;"><span class="t-body t-soft">Briefed</span><span class="t-body t-ink">1,284</span></div>
+        <div class="cf-hairline"></div>
+        <div class="row" style="padding: 12px 20px; justify-content: space-between;"><span class="t-body t-soft">Script approved</span><span class="t-body t-ink">1,046</span></div>
+        <div class="cf-hairline"></div>
+      </div>
+    </div>
+
+    <h3 class="t-card">02.9 Dropzone de subida</h3>
+    <p class="spec">No existe en Paper. Panel hundido, borde discontinuo border-strong, radio 12, icon tile y texto muted.</p>
+    <div class="dropzone-wrap" style="margin-top: 12px;">
+      <div class="cf-dropzone">
+        <span class="cf-tile cf-tile--1" data-icon="upload"></span>
+        <p class="cf-dropzone__title">Arrastra un video aquí o elígelo desde tu equipo</p>
+        <p class="cf-dropzone__hint">mp4, mov o webm, hasta 200 MB</p>
+        <button class="cf-btn cf-btn--white">Elegir archivo</button>
+      </div>
+    </div>
+    <div class="row" style="margin-top: 16px;">
+      <div class="cf-dropzone is-over" style="width: 100%; padding: 24px;">
+        <span class="cf-tile cf-tile--neutral" data-icon="download"></span>
+        <p class="cf-dropzone__title">Suelta el archivo para subirlo</p>
+      </div>
+    </div>
+
+    <h3 class="t-card">02.10 Estado vacío</h3>
+    <p class="spec">La pista se dibuja siempre y la métrica pasa a un guion largo. Nunca desaparece el gráfico.</p>
+    <div class="grid g2" style="margin-top: 12px;">
+      <article class="cf-kpi">
+        <header class="cf-kpi__head"><span class="cf-tile cf-tile--3" data-icon="film"></span><h4 class="cf-kpi__title">Videos entregados</h4></header>
+        <div class="cf-kpi__rule"></div>
+        <div class="cf-kpi__body">
+          <div class="cf-kpi__row"><p class="cf-kpi__metric is-empty">—</p></div>
+          <p class="cf-kpi__caption">Aún no hay videos terminados este mes</p>
+        </div>
+      </article>
+      <div class="card pad-20" style="display: flex; flex-direction: column; justify-content: center; gap: 12px;">
+        <div class="cf-ticks" data-ticks="100" data-stages="" style="width: 100%;"></div>
+        <span class="spec">Sin datos: los 100 ticks vacíos siguen visibles</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 KPI & containers -->
+  <section id="sec-04" data-section="04-kpi-containers">
+    <p class="t-micro t-muted">04 · KPI &amp; containers</p>
+    <h2 class="t-page">Anatomía de KPI, contenedores, anuncios y radios</h2>
+    <p class="lead">Cada KPI es el mismo instrumento: header de 62, un hairline y body de 90.</p>
+
+    <h3 class="t-card">04.1 Anatomía</h3>
+    <div class="grid g2" style="margin-top: 12px; align-items: start;">
+      <article class="cf-kpi">
+        <header class="cf-kpi__head"><span class="cf-tile cf-tile--4" data-icon="palette"></span><h4 class="cf-kpi__title">Saldo de transcripción</h4></header>
+        <div class="cf-kpi__rule"></div>
+        <div class="cf-kpi__body">
+          <div class="cf-kpi__row"><p class="cf-kpi__metric">$14,280</p><button class="cf-btn cf-btn--ink">Add funds</button></div>
+          <p class="cf-kpi__caption">Cubre 3 de 22 trabajos pendientes</p>
+        </div>
+      </article>
+      <div class="kpi-anno t-body t-soft">
+        <p><span class="t-ink">card</span> radio 12, padding inline 18, altura 153</p>
+        <p><span class="t-ink">header</span> 62, tile 32 con radio 8, separación 10</p>
+        <p><span class="t-ink">título</span> 16 / 20 / 500 / −0.01em</p>
+        <p><span class="t-ink">hairline</span> 1 px #E3E3E3, de borde a borde, nunca con sangría</p>
+        <p><span class="t-ink">body</span> 90, padding 15 18, gap 8</p>
+        <p><span class="t-ink">métrica</span> 30 / 36 / 500 / −0.03em</p>
+        <p><span class="t-ink">caption</span> 12 / 16, ink-muted</p>
+        <p><span class="t-ink">acción</span> 36 de alto, radio 8, a la derecha de la métrica</p>
+      </div>
+    </div>
+
+    <h3 class="t-card">04.2 Contenedor de grupo</h3>
+    <p class="spec">Marco blanco de radio 10 con padding 4 y gap 4. Celdas en canvas de radio 6.</p>
+    <div class="cf-rail" style="margin-top: 12px;">
+      <div class="cf-rail__cell cell-metric">
+        <span class="t-micro t-muted">Videos entregados</span>
+        <span class="t-metric t-ink">1,284</span>
+        <span class="cf-delta"><span class="cf-delta__glyph"></span>+24.1%</span>
+        <span class="spec">vs 1,035</span>
+      </div>
+      <div class="cf-rail__cell cell-metric">
+        <span class="t-micro t-muted">Aprobación</span>
+        <span class="t-metric t-ink">94%</span>
+        <span class="cf-delta"><span class="cf-delta__glyph"></span>+6 pts</span>
+        <span class="spec">vs 88%</span>
+      </div>
+      <div class="cf-rail__cell cell-metric">
+        <span class="t-micro t-muted">A tiempo</span>
+        <span class="t-metric t-ink">59%</span>
+        <span class="cf-delta cf-delta--down"><span class="cf-delta__glyph"></span>−3 pts</span>
+        <span class="spec">vs 62%</span>
+      </div>
+      <div class="cf-rail__cell cell-metric">
+        <span class="t-micro t-muted">Canales activos</span>
+        <span class="t-metric t-ink">18</span>
+        <span class="cf-delta cf-delta--flat"><span class="cf-delta__glyph"></span>No change</span>
+        <span class="spec">vs 18</span>
+      </div>
+    </div>
+
+    <h3 class="t-card">04.3 Anuncio</h3>
+    <p class="spec">Única card cuya imagen llega al borde. Dos acciones: una como texto, otra como control.</p>
+    <div class="row" style="margin-top: 12px;">
+      <div class="cf-announce">
+        <div class="cf-announce__band"><span class="cf-tile cf-tile--1" data-icon="sparkle" style="width: 40px; height: 40px; border-radius: var(--cf-radius-pill);"></span></div>
+        <div class="cf-announce__body">
+          <h4 class="cf-announce__title">Configura tu primer preset</h4>
+          <p class="cf-announce__text">Guarda el estilo una vez y reutilízalo en cada video.</p>
+          <div class="cf-announce__foot">
+            <span class="cf-announce__count">2 de 4</span>
+            <button class="cf-btn cf-btn--ghost cf-btn--28">Omitir</button>
+            <button class="cf-btn cf-btn--white cf-btn--28">Siguiente</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="t-card">04.4 Ley de radios</h3>
+    <p class="spec">Cinco valores y ninguno más. Un radio anidado resta el padding.</p>
+    <div class="col" style="margin-top: 12px; gap: 8px;">
+      <div class="row"><span class="spec" style="width: 160px;">xs 6</span><span class="t-body t-soft">badge, swatch, celda dentro de un rail</span></div>
+      <div class="row"><span class="spec" style="width: 160px;">control 8</span><span class="t-body t-soft">botón, chip, input, item de nav</span></div>
+      <div class="row"><span class="spec" style="width: 160px;">tile 8 · group 10</span><span class="t-body t-soft">icon tile de 32 · marco del rail y del track</span></div>
+      <div class="row"><span class="spec" style="width: 160px;">card 12</span><span class="t-body t-soft">cada card, panel y el tope de una barra ancha</span></div>
+      <div class="row"><span class="spec" style="width: 160px;">pill 999</span><span class="t-body t-soft">punto de estado, delta, tick, leyenda, avatar</span></div>
+    </div>
+  </section>
+
+</main>
+
+<script type="module">
+  import { icon } from "/js/icons.js";
+
+  document.querySelectorAll("[data-icon]").forEach((el) => {
+    el.innerHTML = icon(el.dataset.icon);
+  });
+
+  // Ticks y marcas: data-stages="pigmento:n,..." reparte las primeras celdas; el resto queda vacío.
+  const fill = (el, count, cls) => {
+    const pigments = [];
+    for (const pair of (el.dataset.stages || "").split(",").filter(Boolean)) {
+      const [pig, n] = pair.split(":").map(Number);
+      for (let i = 0; i < n; i++) pigments.push(pig);
+    }
+    el.innerHTML = Array.from({ length: count }, (_, i) => {
+      const pig = pigments[i];
+      return `<span class="${cls}${pig ? ` is-${pig}` : ""}"></span>`;
+    }).join("");
+  };
+  document.querySelectorAll("[data-ticks]").forEach((el) => fill(el, Number(el.dataset.ticks), "cf-tick"));
+  document.querySelectorAll("[data-marks]").forEach((el) => fill(el, Number(el.dataset.marks), "cf-mark"));
+</script>
+</body>
+</html>

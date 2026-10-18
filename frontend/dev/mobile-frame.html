@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Vista en ancho fijo</title>
+<style>
+  body { margin: 0; height: 100vh; display: flex; justify-content: center; align-items: stretch; background: #222; overflow: hidden; }
+  iframe { display: block; height: 100vh; border: 0; background: #fff; }
+</style>
+</head>
+<body>
+<!-- Prueba de diseño en un ancho fijo (390 px por defecto), centrada para que la rueda caiga en la app.
+     Parámetros: ?route=nuevo|presets|editor, con route=editor ?job=ID, y ?w=ancho en px (390 por defecto). -->
+<iframe id="app" title="App en ancho fijo"></iframe>
+<script>
+const params = new URLSearchParams(location.search);
+const route = params.get("route") || "nuevo";
+const job = params.get("job") || "";
+const width = Number(params.get("w") || 390);
+const frame = document.getElementById("app");
+frame.style.width = `${width}px`;
+frame.src = route === "editor" && job ? `/#/editor/${job}` : `/#/${route}`;
+</script>
+</body>
+</html>
