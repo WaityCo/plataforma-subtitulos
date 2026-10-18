@@ -26,6 +26,7 @@ from .config import MB, MIN_PREVIEW_SECONDS, MODEL_SIZES, PROJECT_ROOT, Settings
 from .engine_bridge import FONTS_DIR, EngineUnavailable, RealEngine
 from .jobs import ASS_FILE, OUTPUT_FILE, PREVIEW_FILE, JobError, JobManager, comprobar_espacio, error_de_espacio
 from .media import UPLOAD_TYPES, InvalidVideo, probe_video, validate_upload
+from .uploads import UploadManager, UploadNotFound
 from .warmup import start_warmup
 
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -152,18 +153,38 @@ def _parse_overrides(raw: str) -> dict[str, Any]:
     return value
 
 
-def _job_settings(form: FormData, jobs: JobManager, settings: Settings, default_preset: str) -> dict[str, Any]:
-    preset = _text_field(form, "preset") or default_preset
-    raw_overrides = _text_field(form, "overrides")
-    overrides = _parse_overrides(raw_overrides) if raw_overrides else None
-    language = _text_field(form, "language") or None
+def _validar_ajustes(
+    preset: str,
+    overrides: dict[str, Any] | None,
+    language: str | None,
+    model_size: str,
+    jobs: JobManager,
+    settings: Settings,
+    default_preset: str,
+) -> dict[str, Any]:
+    """Ajustes del job. POST /api/jobs y POST /api/uploads/{id}/complete responden igual ante un valor no válido."""
+    preset = preset or default_preset
     if language is not None and language not in LANGUAGES:
         raise HTTPException(422, "language debe ser 'es', 'en' o vacío.")
-    model_size = _text_field(form, "model_size") or settings.default_model
+    model_size = model_size or settings.default_model
     if model_size not in MODEL_SIZES:
         raise HTTPException(422, f"model_size no admitido: {model_size}.")
     jobs.validate_style(preset, overrides)  # ValueError del motor -> 422
     return {"preset": preset, "overrides": overrides, "language": language, "model_size": model_size}
+
+
+def _job_settings(form: FormData, jobs: JobManager, settings: Settings, default_preset: str) -> dict[str, Any]:
+    raw_overrides = _text_field(form, "overrides")
+    overrides = _parse_overrides(raw_overrides) if raw_overrides else None
+    return _validar_ajustes(
+        _text_field(form, "preset"),
+        overrides,
+        _text_field(form, "language") or None,
+        _text_field(form, "model_size"),
+        jobs,
+        settings,
+        default_preset,
+    )
 
 
 def _solo_imprimible(valor: str) -> str:
@@ -186,6 +207,7 @@ def get_config(request: Request) -> dict[str, Any]:
     return {
         "max_upload_mb": settings.max_upload_bytes // MB,
         "max_upload_bytes": settings.max_upload_bytes,
+        "chunk_bytes": settings.chunk_bytes,
         "default_preset": request.app.state.default_preset,
         "version": __version__,
     }
@@ -253,6 +275,116 @@ async def create_job(request: Request) -> dict[str, str]:
         return {"job_id": job_id}
     finally:
         await form.close()
+
+
+class UploadIn(BaseModel):
+    # Subida por partes: el archivo se describe antes de mandar ningún trozo.
+    filename: str = Field(min_length=1, max_length=255)
+    size: int = Field(gt=0)
+    content_type: str | None = None
+
+
+class CompleteIn(BaseModel):
+    # Los mismos campos que el formulario de POST /api/jobs. Todos opcionales.
+    preset: str | None = None
+    overrides: dict[str, Any] | None = None
+    language: str | None = None
+    model_size: str | None = None
+
+
+def _uploads(request: Request) -> UploadManager:
+    return request.app.state.uploads
+
+
+@router.post("/uploads", status_code=201)
+def create_upload(body: UploadIn, request: Request) -> dict[str, Any]:
+    # Antes de aceptar ningún trozo: extensión (400), tamaño (413) y disco (507).
+    return _uploads(request).create(body.filename, body.size, body.content_type or "")
+
+
+@router.get("/uploads/{upload_id}")
+def get_upload(upload_id: str, request: Request) -> dict[str, Any]:
+    # Para reanudar: qué trozos ya están y cuántos de qué tamaño faltan.
+    return _uploads(request).status(upload_id)
+
+
+@router.put("/uploads/{upload_id}/chunks/{n}")
+async def put_chunk(upload_id: str, n: int, request: Request) -> dict[str, int]:
+    # Cuerpo crudo del trozo. Llega a un .part y solo toma su nombre cuando entra entero: reenviarlo lo sustituye.
+    uploads = _uploads(request)
+    limite = uploads.check_chunk(upload_id, n)  # 404 o 409 antes de leer nada
+    declared = request.headers.get("content-length", "")
+    if declared.isdigit() and int(declared) > limite:
+        raise uploads.chunk_too_large(limite)  # rechazo rápido, sin leer el cuerpo
+    temporal = uploads.temp_chunk(upload_id, n)
+    recibidos = 0
+    try:
+        with temporal.open("wb") as salida:
+            async for trozo in request.stream():
+                recibidos += len(trozo)
+                if recibidos > limite:  # también cuando el cliente no declara la longitud
+                    raise uploads.chunk_too_large(limite)
+                await run_in_threadpool(salida.write, trozo)
+        uploads.commit_chunk(upload_id, n)
+    except OSError as exc:
+        temporal.unlink(missing_ok=True)
+        if exc.errno == errno.ENOSPC:
+            raise error_de_espacio(uploads.root) from exc
+        if exc.errno == errno.ENOENT:
+            raise UploadNotFound("Subida no encontrada.") from exc
+        raise
+    except BaseException:
+        temporal.unlink(missing_ok=True)
+        raise
+    return {"chunk": n, "bytes": recibidos}
+
+
+@router.post("/uploads/{upload_id}/complete", status_code=201)
+async def complete_upload(upload_id: str, request: Request, body: CompleteIn | None = None) -> dict[str, str]:
+    jobs = _jobs(request)
+    uploads = _uploads(request)
+    settings: Settings = request.app.state.settings
+    datos = body or CompleteIn()
+    ajustes = _validar_ajustes(
+        (datos.preset or "").strip(),
+        datos.overrides,
+        (datos.language or "").strip() or None,
+        (datos.model_size or "").strip(),
+        jobs,
+        settings,
+        request.app.state.default_preset,
+    )
+    meta, apartada = uploads.begin_complete(upload_id)  # comprueba los trozos y aparta la subida
+    job_id = uuid.uuid4().hex
+    folder = jobs.job_dir(job_id)
+    try:
+        folder.mkdir(parents=True)
+        source = folder / f"input{meta['ext']}"
+        try:
+            await run_in_threadpool(uploads.assemble, apartada, meta, source)
+        except OSError as exc:
+            if exc.errno == errno.ENOSPC:
+                raise error_de_espacio(jobs.data_dir) from exc
+            raise
+        info = await run_in_threadpool(probe_video, source)
+        jobs.create_job(job_id=job_id, input_ext=meta["ext"], info=info, **ajustes)
+    except InvalidVideo:  # el contenido no es un video: la subida no sirve y se borra
+        shutil.rmtree(folder, ignore_errors=True)
+        uploads.finish_complete(upload_id)
+        raise
+    except BaseException:  # otro fallo, p. ej. sin espacio: la subida vuelve a su sitio para reintentar
+        shutil.rmtree(folder, ignore_errors=True)
+        uploads.abort_complete(upload_id)
+        raise
+    uploads.finish_complete(upload_id)
+    _registrar_correo_access(request, job_id, "subida por partes")
+    return {"job_id": job_id}
+
+
+@router.delete("/uploads/{upload_id}", status_code=204)
+def delete_upload(upload_id: str, request: Request) -> None:
+    # Cancelar: los trozos dejan de ocupar disco ya. 404 si no existe; 409 si complete la está armando.
+    _uploads(request).cancel(upload_id)
 
 
 @router.get("/jobs/{job_id}")
@@ -407,20 +539,32 @@ def create_app(
     _configurar_log()
     settings = Settings.from_env() if settings is None else settings
     manager = JobManager(settings, RealEngine() if engine is None else engine)
+    uploads = UploadManager(settings.data_dir, settings)
     # Se resuelve al crear la app: si SUBS_DEFAULT_PRESET no existe entre los presets, el arranque se detiene.
     default_preset = resolve_default_preset(settings.default_preset, [p["id"] for p in manager.list_presets()])
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         manager.start()
+        uploads.start()  # limpia las subidas caducadas y sigue cada hora
         start_warmup()  # el motor de texto y el gancho se precalientan en segundo plano, sin retrasar el arranque
         try:
             yield
         finally:
+            uploads.stop()
             manager.stop()
 
-    app = FastAPI(title="Plataforma de subtítulos", lifespan=lifespan)
+    # Con clave, la API va detrás de un proxy: no se publican documentación ni la interfaz (la sirve un Worker).
+    ocultar = bool(settings.api_key)
+    app = FastAPI(
+        title="Plataforma de subtítulos",
+        lifespan=lifespan,
+        docs_url=None if ocultar else "/docs",
+        redoc_url=None if ocultar else "/redoc",
+        openapi_url=None if ocultar else "/openapi.json",
+    )
     app.state.jobs = manager
+    app.state.uploads = uploads
     app.state.settings = settings
     app.state.default_preset = default_preset
     app.state.presets_dir = presets_dir or PRESETS_DIR
@@ -434,7 +578,7 @@ def create_app(
             CORSMiddleware,
             allow_origins=list(settings.cors_origins),
             allow_credentials=True,  # las cookies de Cloudflare Access viajan con la petición
-            allow_methods=["GET", "POST", "PUT"],
+            allow_methods=["GET", "POST", "PUT", "DELETE"],
             allow_headers=["Content-Type", "If-None-Match", "Range"],
             expose_headers=["X-Frame-Time", "X-Empty", "ETag"],
         )
@@ -446,11 +590,12 @@ def create_app(
     app.add_exception_handler(RequestValidationError, _validation_error)
     # Montajes siempre presentes: frontend/ puede crearse después del arranque. Las rutas /api van antes.
     app.mount("/fonts", _OptionalStaticFiles(directory=FONTS_DIR, check_dir=False), name="fonts")
-    app.mount(
-        "/",
-        _OptionalStaticFiles(directory=frontend_dir or FRONTEND_DIR, html=True, check_dir=False),
-        name="frontend",
-    )
+    if not ocultar:
+        app.mount(
+            "/",
+            _OptionalStaticFiles(directory=frontend_dir or FRONTEND_DIR, html=True, check_dir=False),
+            name="frontend",
+        )
     return app
 
 

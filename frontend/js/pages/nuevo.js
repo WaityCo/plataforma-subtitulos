@@ -1,11 +1,12 @@
 // Nuevo video: subida con progreso de subida y de transcripción. Cuando el job queda listo, abre el editor.
 // Antes de subir, el preset se elige sobre muestras CSS aproximadas: la miniatura real aparece en el editor.
-import { api, createJob } from "../api.js";
+import { api } from "../api.js";
 import { el, fileLabel, ico, megabytes, messageOf, setStatus, setTicks, status, ticksBar } from "../dom.js";
 import { track } from "../controls.js";
 import { presetGrid } from "../presets.js";
 import { STATUS, defaultPresetId, rememberJob } from "../recents.js";
 import { refreshRecent } from "../shell.js";
+import { RETRY_DELAYS, UploadCancelled, pendingUpload, sendVideo } from "../upload.js";
 
 // Límite de subida: lo da /api/config (max_upload_bytes). Hasta que responde, no hay cifra ni se comprueba el tamaño.
 let maxBytes = null;
@@ -17,7 +18,16 @@ const LANGUAGES = [
 ];
 const STAGES = { audio: "Extrayendo el audio", transcribe: "Transcribiendo el audio", subtitles: "Generando subtítulos" };
 const DROP_TITLE = "Arrastra un video aquí o elígelo desde tu equipo";
-const hintFor = (bytes) => (bytes ? `mp4, mov o webm, hasta ${Math.round(bytes / (1024 * 1024))} MB` : "mp4, mov o webm");
+const mb = (bytes) => `${Math.round(bytes / (1024 * 1024))} MB`;
+const hintFor = (bytes) => (bytes ? `mp4, mov o webm, hasta ${mb(bytes)}` : "mp4, mov o webm");
+// 83 -> "quedan 1 min 23 s". Sin velocidad todavía, el tiempo restante no se conoce.
+function etaText(seconds) {
+  if (!Number.isFinite(seconds)) return "calculando el tiempo restante";
+  const s = Math.max(1, Math.round(seconds));
+  if (s < 60) return `quedan ${s} s`;
+  if (s < 3600) return `quedan ${Math.floor(s / 60)} min ${s % 60} s`;
+  return `quedan ${Math.floor(s / 3600)} h ${Math.floor((s % 3600) / 60)} min`;
+}
 
 export function mountNuevo(view, ctx) {
   let alive = true;
@@ -26,6 +36,9 @@ export function mountNuevo(view, ctx) {
   let language = "";
   let presetId = defaultPresetId(ctx.presets);
   let busy = false;
+  let config = null;
+  let abort = null;
+  let resumeNote = "";
 
   const title = el("h1", { class: "t-page", tabindex: "-1", text: "Nuevo video" });
   const intro = el("p", {
@@ -113,23 +126,29 @@ export function mountNuevo(view, ctx) {
   const stateNode = status(null, "");
   stateNode.setAttribute("aria-live", "polite");
   const detail = el("p", { class: "t-micro t-muted progress__detail" });
+  // Cancelar solo durante la subida: cuando el servidor crea el trabajo ya no se puede parar.
+  const cancelButton = el("button", { type: "button", class: "cf-btn cf-btn--white cf-btn--32", onclick: () => abort?.abort() }, "Cancelar");
+  const cancelRow = el("div", { class: "progress__actions", hidden: true }, cancelButton);
   const progress = el(
     "section",
     { class: "cf-card pad-20", hidden: true, "aria-labelledby": "nuevo-progress-title" },
     el("div", { class: "progress__head" }, el("h2", { class: "t-card", id: "nuevo-progress-title", text: "Progreso" }), stateNode),
     bar,
     detail,
+    cancelRow,
   );
 
   view.replaceChildren(el("header", { class: "page-head" }, title, intro), el("div", { class: "stack" }, form, progress));
   title.focus({ preventScroll: true });
 
-  // Límite de subida del backend: GET /api/config, campo max_upload_bytes. Sin respuesta, no hay cifra.
-  api
+  // Límites del backend (GET /api/config): max_upload_bytes para validar y chunk_bytes para subir por trozos.
+  // Sin respuesta no hay cifra ni chunk_bytes: el video va por POST /api/jobs y el servidor sigue validando el tamaño.
+  const ready = api
     .config()
-    .then((config) => {
-      if (!Number.isFinite(config?.max_upload_bytes)) return;
-      maxBytes = config.max_upload_bytes;
+    .then((loaded) => {
+      config = loaded;
+      if (!Number.isFinite(loaded?.max_upload_bytes)) return;
+      maxBytes = loaded.max_upload_bytes;
       if (!file) dropHint.textContent = hintFor(maxBytes);
     })
     .catch(() => {});
@@ -166,52 +185,128 @@ export function mountNuevo(view, ctx) {
     });
   }
 
+  // Motivo para no subir el archivo, o "" si puede subirse. Sin límite cargado de /api/config no se comprueba el tamaño máximo.
+  function problemOf(next) {
+    if (!FORMAT.test(next.name)) return "Formato no admitido: usa mp4, mov o webm.";
+    if (!next.size) return "El archivo está vacío.";
+    if (maxBytes !== null && next.size > maxBytes) return `El archivo pesa ${megabytes(next.size)} y el máximo es ${mb(maxBytes)}.`;
+    return "";
+  }
+
+  // Texto bajo el nombre: el tamaño y, si hay una subida a medias de este archivo, que se reanudará.
+  function fileHint(next) {
+    return `${megabytes(next.size)} · ${pendingUpload(next) ? "subida a medias: se reanudará" : "listo para subir"}`;
+  }
+
+  function refuse(problem) {
+    file = null;
+    start.disabled = true;
+    dropTitle.textContent = DROP_TITLE;
+    dropHint.textContent = hintFor(maxBytes);
+    say("danger", problem);
+  }
+
   function choose(next) {
     if (busy) return;
-    const problem = !FORMAT.test(next.name)
-      ? "Formato no admitido: usa mp4, mov o webm."
-      : maxBytes !== null && next.size > maxBytes
-        ? `El archivo supera ${Math.round(maxBytes / (1024 * 1024))} MB.`
-        : "";
+    const problem = problemOf(next);
     if (problem) {
-      file = null;
-      start.disabled = true;
-      dropTitle.textContent = DROP_TITLE;
-      dropHint.textContent = hintFor(maxBytes);
-      say("danger", problem);
+      refuse(problem);
       return;
     }
     file = next;
     dropTitle.textContent = fileLabel(next.name);
-    dropHint.textContent = `${megabytes(next.size)} · listo para subir`;
+    dropHint.textContent = fileHint(next);
     start.disabled = false;
     say(null, "");
   }
 
+  // Mientras se sube, recargar o cerrar la pestaña avisa. Los trozos ya enviados se conservan y la subida se reanuda.
+  const warnLeaving = (event) => {
+    event.preventDefault();
+    event.returnValue = "";
+  };
+
+  // El texto solo cambia cuando cambia el estado, para que el anuncio de lectores de pantalla no se repita.
+  function setState(tone, label) {
+    if (stateNode.textContent !== label) setStatus(stateNode, tone, label);
+  }
+
+  // Progreso: la barra marca los bytes enviados; el texto dice porcentaje, velocidad y tiempo restante.
+  function showProgress({ sent, total, speed, eta }) {
+    if (!alive) return;
+    const fraction = total ? sent / total : 0;
+    setState("info", "Subiendo video");
+    setTicks(bar, fraction * 100);
+    const mbps = speed / (1024 * 1024);
+    const rate = speed ? `${mbps < 1 ? mbps.toFixed(2) : mbps.toFixed(1)} MB/s · ${etaText(eta)}` : "calculando la velocidad";
+    detail.textContent = `${resumeNote}Subido ${Math.round(fraction * 100)} % · ${rate}`;
+  }
+
+  // Avisos de la subida: reanudación, reintentos y el paso final (crear el trabajo).
+  function showState(event) {
+    if (!alive) return;
+    if (event.kind === "resume") {
+      resumeNote = `Reanudada: ${event.done} de ${event.total} fragmentos ya estaban en el servidor. `;
+    }
+    if (event.kind === "retry") {
+      setState("warning", "Reintentando");
+      detail.textContent = `Falló el fragmento ${event.chunk + 1} de ${event.total}. ${event.message} Reintento ${event.attempt} de ${RETRY_DELAYS.length} en ${event.delay / 1000} s.`;
+    }
+    if (event.kind === "complete") {
+      cancelRow.hidden = true;
+      setState("info", "Creando el trabajo");
+      detail.textContent = `${resumeNote}Comprobando el archivo en el servidor…`;
+    }
+  }
+
   async function upload() {
     if (!file || busy) return;
-    const name = file.name;
+    await ready;
+    // El límite puede llegar después de elegir el archivo: se vuelve a comprobar antes de subir.
+    const problem = problemOf(file);
+    if (problem) {
+      refuse(problem);
+      return;
+    }
+    const picked = file;
     busy = true;
+    abort = new AbortController();
+    window.addEventListener("beforeunload", warnLeaving);
+    resumeNote = "";
     setBusy(true);
     say(null, "");
     progress.hidden = false;
-    setStatus(stateNode, "info", "Subiendo video");
+    cancelRow.hidden = false;
+    setState("info", "Subiendo video");
     setTicks(bar, 0);
     detail.textContent = "";
     try {
-      const { job_id: id } = await createJob({ file, preset: presetId, language }, (fraction) => {
-        if (!alive) return;
-        setTicks(bar, fraction * 100);
-        detail.textContent = `Subiendo: ${Math.round(fraction * 100)} %`;
+      const { job_id: id } = await sendVideo({
+        file: picked,
+        preset: presetId,
+        language,
+        config,
+        signal: abort.signal,
+        onProgress: showProgress,
+        onState: showState,
       });
-      rememberJob(id, name);
+      cancelRow.hidden = true;
+      window.removeEventListener("beforeunload", warnLeaving);
+      rememberJob(id, picked.name);
       refreshRecent();
       follow(id);
     } catch (error) {
       busy = false;
       setBusy(false);
       progress.hidden = true;
-      say("danger", messageOf(error));
+      cancelRow.hidden = true;
+      window.removeEventListener("beforeunload", warnLeaving);
+      if (error instanceof UploadCancelled) {
+        say("info", "Subida cancelada.");
+      } else {
+        say("danger", messageOf(error));
+      }
+      dropHint.textContent = fileHint(picked);
     }
   }
 

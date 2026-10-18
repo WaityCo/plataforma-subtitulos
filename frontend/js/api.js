@@ -112,8 +112,12 @@ export async function saveFile(url, name) {
 
 // Sube el video con XMLHttpRequest para tener progreso de subida (fetch no lo expone).
 // onProgress recibe una fracción de 0 a 1. Resuelve con { job_id }. Con otro origen, la petición lleva credenciales.
-export function createJob({ file, preset, overrides, language }, onProgress) {
+export function createJob({ file, preset, overrides, language }, onProgress, signal) {
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new ApiError(0, "Envío cancelado."));
+      return;
+    }
     const form = new FormData();
     form.append("file", file);
     form.append("preset", preset);
@@ -132,6 +136,46 @@ export function createJob({ file, preset, overrides, language }, onProgress) {
       else reject(new ApiError(xhr.status, detailOf(body, `Error ${xhr.status} al subir el video.`)));
     };
     xhr.onerror = () => reject(new ApiError(0, "No se pudo conectar con el servidor."));
+    xhr.onabort = () => reject(new ApiError(0, "Envío cancelado."));
+    signal?.addEventListener("abort", () => xhr.abort(), { once: true });
     xhr.send(form);
   });
 }
+
+// Subida por fragmentos (contrato de T2): POST /api/uploads, PUT /api/uploads/{id}/chunks/{n}, GET /api/uploads/{id} y
+// POST /api/uploads/{id}/complete. Cada fragmento va por XHR para tener el progreso en bytes; signal cancela el envío.
+export const uploadClient = {
+  // Cuerpo: { filename, size, content_type }. Responde { upload_id, chunk_size, total_chunks }. Errores 400, 413 y 507 con detail.
+  start: (body) => request("POST", "/uploads", { body }),
+  // { received: [n, ...], total_chunks, size }. 404 si la subida ya no existe.
+  status: (id) => request("GET", `/uploads/${id}`),
+  // Ajustes del job (preset, language, overrides, model_size). Responde { job_id }.
+  complete: (id, settings) => request("POST", `/uploads/${id}/complete`, { body: settings }),
+  // Cancelar: borra la subida y sus trozos (204). 404 si ya no existe; 409 si complete la está armando.
+  remove: (id) => request("DELETE", `/uploads/${id}`),
+  chunk: (id, n, blob, { signal, onProgress } = {}) =>
+    new Promise((resolve, reject) => {
+      if (signal?.aborted) {
+        reject(new ApiError(0, "Envío cancelado."));
+        return;
+      }
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", `${API}/uploads/${id}/chunks/${n}`);
+      xhr.withCredentials = CROSS_ORIGIN;
+      xhr.setRequestHeader("Content-Type", "application/octet-stream");
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) onProgress?.(event.loaded);
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve(parse(xhr.responseText));
+        else reject(new ApiError(xhr.status, detailOf(parse(xhr.responseText), `Error ${xhr.status} al subir un fragmento.`)));
+      };
+      xhr.onerror = () => reject(new ApiError(0, "No se pudo conectar con el servidor."));
+      xhr.onabort = () => reject(new ApiError(0, "Envío cancelado."));
+      // La escucha se quita al acabar: un video grande tiene muchos trozos y no deben acumularse.
+      const abortChunk = () => xhr.abort();
+      xhr.onloadend = () => signal?.removeEventListener("abort", abortChunk);
+      signal?.addEventListener("abort", abortChunk, { once: true });
+      xhr.send(blob);
+    }),
+};

@@ -13,8 +13,17 @@ const SESSION_SECONDS = 60 * 60 * 24 * 30;
 const VERSION = "v1";
 const PUBLIC_PATHS = new Set(["/css/tokens.css", "/css/components.css", "/assets/logo.svg"]);
 const FAILED_LOGIN_DELAY_MS = 800;
-const API_HEADERS = ["range", "if-range", "if-none-match", "if-modified-since", "content-type", "content-length", "accept"];
-const FONT_HEADERS = ["range", "if-range", "if-none-match", "if-modified-since", "accept"];
+// Cabeceras que no viajan al backend: las de conexión, las que añaden Cloudflare o un proxy, y la cookie de sesión,
+// que el backend no necesita. El resto (Range, Content-Type, Content-Length, If-None-Match y las de la subida por
+// partes) se reenvía tal cual. Expect: 100-continue lo negocia el Worker con el cliente; reenviado al backend
+// rompe las subidas grandes.
+const DROPPED_REQUEST_HEADERS = new Set([
+  "cookie", "host", "authorization", "connection", "keep-alive", "proxy-authorization", "proxy-authenticate", "te",
+  "trailer", "transfer-encoding", "upgrade", "expect", "x-subs-key", "x-real-ip",
+]);
+const DROPPED_REQUEST_PREFIXES = ["cf-", "x-forwarded-"];
+// PUT y DELETE hacen falta para la subida por partes. Cualquier otro método se rechaza en el Worker.
+const PROXY_METHODS = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"];
 const HOP_BY_HOP = new Set([
   "connection", "keep-alive", "transfer-encoding", "upgrade", "proxy-authenticate", "proxy-authorization", "te", "trailer", "set-cookie",
 ]);
@@ -31,25 +40,27 @@ export default {
     if (!(await hasSession(request, env))) {
       return redirect(`/login?next=${encodeURIComponent(safeNext(path + url.search))}`);
     }
-    if (path === "/api" || path.startsWith("/api/")) return proxy(request, env, API_HEADERS);
-    if (path === "/fonts" || path.startsWith("/fonts/")) return proxy(request, env, FONT_HEADERS);
+    if (path === "/api" || path.startsWith("/api/")) return proxy(request, env);
+    if (path === "/fonts" || path.startsWith("/fonts/")) return proxy(request, env);
     return env.ASSETS.fetch(request);
   },
 };
 
-async function proxy(request, env, allowedHeaders) {
+async function proxy(request, env) {
+  if (!PROXY_METHODS.includes(request.method)) {
+    return new Response(JSON.stringify({ detail: "Método no permitido." }), {
+      status: 405,
+      headers: { "Content-Type": "application/json; charset=utf-8", Allow: PROXY_METHODS.join(", "), "Cache-Control": "no-store" },
+    });
+  }
   const backend = (env.BACKEND_URL || "").replace(/\/+$/, "");
   if (!backend || !env.SUBS_API_KEY) {
     console.error("Faltan BACKEND_URL o SUBS_API_KEY en los secretos del Worker.");
     return unavailable();
   }
   const url = new URL(request.url);
-  const headers = new Headers();
-  for (const name of allowedHeaders) {
-    const value = request.headers.get(name);
-    if (value !== null) headers.set(name, value);
-  }
-  headers.set("X-Subs-Key", env.SUBS_API_KEY);
+  const headers = forwardedHeaders(request.headers, env.SUBS_API_KEY);
+  // El cuerpo pasa en streaming: no se lee ni se guarda. Cada parte de una subida llega a unos 8 MB.
   const init = { method: request.method, headers, redirect: "manual" };
   if (request.method !== "GET" && request.method !== "HEAD") init.body = request.body;
   let upstream;
@@ -60,6 +71,17 @@ async function proxy(request, env, allowedHeaders) {
     return unavailable();
   }
   return relay(upstream, request.method, backend);
+}
+
+function forwardedHeaders(incoming, key) {
+  const headers = new Headers();
+  for (const [name, value] of incoming) {
+    const lower = name.toLowerCase();
+    if (DROPPED_REQUEST_HEADERS.has(lower) || DROPPED_REQUEST_PREFIXES.some((prefix) => lower.startsWith(prefix))) continue;
+    headers.set(name, value);
+  }
+  headers.set("X-Subs-Key", key);
+  return headers;
 }
 
 function relay(upstream, method, backend) {

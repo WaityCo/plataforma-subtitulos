@@ -1,4 +1,4 @@
-"""Clave de acceso (SUBS_API_KEY): X-Subs-Key en /api/* y /fonts/*; / y la interfaz siguen públicos."""
+"""Clave de acceso (SUBS_API_KEY): X-Subs-Key en /api/* y /fonts/*. Con clave, la interfaz y la documentación no se sirven."""
 
 import hmac
 from dataclasses import replace
@@ -49,9 +49,17 @@ def test_las_fuentes_con_clave_pasan_al_montaje(cliente):
     assert response.status_code == 404  # la clave pasó; el archivo no existe
 
 
-def test_la_interfaz_sigue_publica(cliente):
-    assert cliente.get("/").status_code == 200
-    assert cliente.get("/index.html").status_code == 200
+def test_con_clave_la_interfaz_y_la_documentacion_no_se_sirven(cliente):
+    for ruta in ("/", "/index.html", "/js/app.js", "/docs", "/redoc", "/openapi.json"):
+        assert cliente.get(ruta).status_code == 404, ruta
+
+
+def test_sin_clave_la_interfaz_y_la_documentacion_siguen_publicas(tmp_path):
+    with TestClient(create_app(settings=Settings(data_dir=tmp_path / "data"), engine=FakeEngine())) as client:
+        assert client.get("/").status_code == 200
+        assert client.get("/index.html").status_code == 200
+        assert client.get("/docs").status_code == 200
+        assert client.get("/openapi.json").status_code == 200
 
 
 def test_el_preflight_de_cors_no_pide_la_clave(tmp_path):

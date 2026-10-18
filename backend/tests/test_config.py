@@ -14,10 +14,16 @@ def test_valores_por_defecto():
     settings = Settings.from_env({})
 
     assert settings.data_dir == PROJECT_ROOT / "data"
-    assert settings.max_upload_bytes == 200 * MB
+    assert settings.max_upload_bytes == 500 * MB
+    assert settings.chunk_bytes == 8 * MB
     assert settings.default_model == "small"
     assert settings.max_preview_seconds == 15
     assert settings.default_preset is None  # automático: ken_remedie si existe, si no ken_classic
+
+
+@pytest.mark.parametrize("valor, megabytes", [("1", 1), ("90", 90)])
+def test_chunk_mb_admite_de_1_a_90(valor, megabytes):
+    assert Settings.from_env({"SUBS_CHUNK_MB": valor}).chunk_bytes == megabytes * MB
 
 
 def test_las_variables_sobrescriben_los_valores(tmp_path):
@@ -59,6 +65,9 @@ def test_valor_vacio_equivale_a_no_definir_la_variable():
         ("SUBS_DEFAULT_MODEL", "gigante"),
         ("SUBS_MAX_PREVIEW_SECONDS", "0.5"),
         ("SUBS_MAX_PREVIEW_SECONDS", "nan"),
+        ("SUBS_CHUNK_MB", "0"),
+        ("SUBS_CHUNK_MB", "91"),
+        ("SUBS_CHUNK_MB", "mucho"),
     ],
 )
 def test_valor_no_valido_detiene_la_configuracion(name, value):

@@ -1,7 +1,8 @@
 """Configuración de despliegue. Es el único módulo que lee variables SUBS_* del entorno.
 
 SUBS_DATA_DIR (data/): carpeta de jobs, base SQLite y subs.lock. Una ruta relativa cuelga de la raíz.
-SUBS_MAX_UPLOAD_MB (200): tamaño máximo de subida, en MB. Entero mayor que 0.
+SUBS_MAX_UPLOAD_MB (500): tamaño máximo de subida, en MB. Entero mayor que 0.
+SUBS_CHUNK_MB (8): tamaño de cada trozo de la subida por partes, en MB. Entero de 1 a 90.
 SUBS_DEFAULT_MODEL (small): modelo de Whisper si el formulario no pide otro.
 SUBS_MAX_PREVIEW_SECONDS (15): duración máxima del preview, en segundos. El mínimo es 1.
 SUBS_DEFAULT_PRESET (ken_remedie si el motor lo tiene; si no, ken_classic): preset si el formulario no pide otro.
@@ -19,7 +20,9 @@ from urllib.parse import urlsplit
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
-DEFAULT_MAX_UPLOAD_MB = 200
+DEFAULT_MAX_UPLOAD_MB = 500
+DEFAULT_CHUNK_MB = 8  # 8 MB tardan unos 28 s a 0,29 MB/s, por debajo de los 100 s de Cloudflare
+MAX_CHUNK_MB = 90  # Tope de configuración: a 0,29 MB/s, un trozo de más de unos 29 MB ya supera los 100 s
 DEFAULT_MODEL = "small"
 DEFAULT_MAX_PREVIEW_SECONDS = 15
 MIN_PREVIEW_SECONDS = 1
@@ -44,6 +47,7 @@ class Settings:
     default_preset: str | None = None  # None: se resuelve con resolve_default_preset
     cors_origins: tuple[str, ...] = ()  # vacío: solo mismo origen
     api_key: str | None = None  # None: la API no pide clave
+    chunk_bytes: int = DEFAULT_CHUNK_MB * MB  # tamaño de cada trozo de la subida por partes
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> "Settings":
@@ -56,6 +60,7 @@ class Settings:
             default_preset=_value(env.get("SUBS_DEFAULT_PRESET")),
             cors_origins=_cors_origins(env.get("SUBS_CORS_ORIGINS")),
             api_key=_value(env.get("SUBS_API_KEY")),
+            chunk_bytes=_chunk_mb(env.get("SUBS_CHUNK_MB")) * MB,
         )
 
 
@@ -99,6 +104,19 @@ def _upload_mb(raw: str | None) -> int:
         raise ConfigError(f"SUBS_MAX_UPLOAD_MB debe ser un entero: {value!r}.") from exc
     if megabytes <= 0:
         raise ConfigError("SUBS_MAX_UPLOAD_MB debe ser mayor que 0.")
+    return megabytes
+
+
+def _chunk_mb(raw: str | None) -> int:
+    value = _value(raw)
+    if value is None:
+        return DEFAULT_CHUNK_MB
+    try:
+        megabytes = int(value)
+    except ValueError as exc:
+        raise ConfigError(f"SUBS_CHUNK_MB debe ser un entero: {value!r}.") from exc
+    if not 1 <= megabytes <= MAX_CHUNK_MB:
+        raise ConfigError(f"SUBS_CHUNK_MB debe estar entre 1 y {MAX_CHUNK_MB}: {value!r}.")
     return megabytes
 
 

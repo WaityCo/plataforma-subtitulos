@@ -29,18 +29,19 @@ Los valores llegan por variables de entorno. Una variable vacía equivale a no d
 | Variable | Por defecto | Lee | Efecto |
 |---|---|---|---|
 | `SUBS_DATA_DIR` | `data/` | `backend/config.py` | Carpeta de jobs, base SQLite y `subs.lock`. Una ruta relativa cuelga de la raíz del proyecto. |
-| `SUBS_MAX_UPLOAD_MB` | `200` | `backend/config.py` | Tamaño máximo de subida, en MB. Entero mayor que 0. Detrás de un Cloudflare Tunnel en plan Free, usa `100` o menos (ver nota de Cloudflare abajo). |
+| `SUBS_MAX_UPLOAD_MB` | `500` | `backend/config.py` | Tamaño máximo de un video, en MB. Entero mayor que 0. Los videos se suben por trozos, así que este tamaño no depende del límite por petición de Cloudflare. |
+| `SUBS_CHUNK_MB` | `8` | `backend/config.py` | Tamaño de cada trozo de la subida por partes, en MB. Entero de 1 a 90. Cloudflare corta a los 100 s las peticiones que no terminan: con el túnel a unos 0,29 MB/s, 8 MB tardan unos 28 s. |
 | `SUBS_DEFAULT_MODEL` | `small` | `backend/config.py` | Modelo de Whisper si el formulario no pide `model_size`: `tiny`, `base`, `small`, `medium`, `large-v2` o `large-v3`. |
 | `SUBS_MAX_PREVIEW_SECONDS` | `15` | `backend/config.py` | Duración máxima del preview de render, en segundos. El mínimo es 1. |
 | `SUBS_DEFAULT_PRESET` | `ken_remedie` si el motor lo tiene; si no, `ken_classic` | `backend/config.py` | Preset si el formulario no pide `preset`. Con valor, debe existir entre los presets del motor. |
 | `SUBS_CORS_ORIGINS` | vacío: solo mismo origen | `backend/config.py` | Solo para desarrollo local: orígenes que pueden llamar a la API desde otro puerto o dominio, separados por comas (p. ej. `http://localhost:5173`). Con orígenes se permiten credenciales (cookies de Cloudflare Access). |
-| `SUBS_API_KEY` | vacío: la API no pide clave | `backend/acceso.py` | Si se define, toda petición a `/api/*` y `/fonts/*` debe llevar la cabecera `X-Subs-Key` con ese valor, o responde 401. `/` y la interfaz siguen públicos. |
+| `SUBS_API_KEY` | vacío: la API no pide clave | `backend/acceso.py` | Si se define, toda petición a `/api/*` y `/fonts/*` debe llevar la cabecera `X-Subs-Key` con ese valor, o responde 401. Con clave, `/docs`, `/redoc`, `/openapi.json` y la interfaz no se sirven (404): los publica el Worker. |
 | `FFMPEG_BIN` | ffmpeg-full de Homebrew, o el PATH | `engine/ffbin.py` | Ruta del ffmpeg. |
 | `FFPROBE_BIN` | ffprobe de ffmpeg-full, o el PATH | `engine/ffbin.py` | Ruta del ffprobe. |
 
 La CLI del motor no lee estas variables. En la imagen, `HF_HOME=/opt/hf-cache` lo lee huggingface_hub para guardar los modelos.
 
-**Cloudflare.** En producción, el frontend y la API van por el mismo origen, a través de un proxy. Cloudflare Free rechaza los cuerpos de más de 100 MB antes de que lleguen al backend, con su propia página y no con JSON: si la API va detrás de un Cloudflare Tunnel en ese plan, pon `SUBS_MAX_UPLOAD_MB=100` o menos. La interfaz lee el límite real de `GET /api/config` (`max_upload_mb` y `max_upload_bytes`). Con `SUBS_API_KEY`, el proxy tiene que añadir `X-Subs-Key` también a las rutas `/fonts/*`. Con Cloudflare Access delante, cada subida, edición y render deja en el log del servidor, con el id del job, el correo de la cabecera `Cf-Access-Authenticated-User-Email`. Esa cabecera solo se registra: no autoriza nada.
+**Cloudflare.** En producción, el frontend y la API van por el mismo origen, a través de un proxy. Cloudflare Free rechaza los cuerpos de más de 100 MB y corta a los 100 s las peticiones que no terminan. Por eso los videos se suben en trozos de `SUBS_CHUNK_MB` (8 MB por defecto), cada uno en su propia petición (`POST /api/uploads`, `PUT /api/uploads/{id}/chunks/{n}`, `POST /api/uploads/{id}/complete` y `DELETE /api/uploads/{id}` para cancelar). La interfaz lee el límite real de `GET /api/config` (`max_upload_mb` y `max_upload_bytes`). Con `SUBS_API_KEY`, el proxy tiene que añadir `X-Subs-Key` también a las rutas `/fonts/*`. Con Cloudflare Access delante, cada subida, edición y render deja en el log del servidor, con el id del job, el correo de la cabecera `Cf-Access-Authenticated-User-Email`. Esa cabecera solo se registra: no autoriza nada.
 
 Solo el proceso que tiene el lock `subs.lock` en `SUBS_DATA_DIR` ejecuta el worker y marca como interrumpidos los jobs que quedaron en curso. Un lock es válido mientras su pid vive y su latido tiene menos de 120 s. Un segundo proceso sobre la misma carpeta sirve la API y encola jobs, pero no toca los del primero: el worker del dueño procesa esa misma cola. Ese proceso reintenta tomar el lock cada 15 s. Si el dueño muere, en unos 15 s el siguiente toma el worker, marca como «interrumpido por reinicio» lo que estaba en curso y procesa la cola. Un dueño que pierde el lock deja de procesar jobs.
 
@@ -58,12 +59,34 @@ En macOS, el script avisa si falta `ffmpeg-full`. La API arranca igual, pero sin
 
 ### Flujo en el editor
 
-1. **Subir.** Elige un video mp4, mov o webm (hasta `SUBS_MAX_UPLOAD_MB`) y el idioma: automático, español o inglés.
+1. **Subir.** Elige un video mp4, mov o webm (hasta `SUBS_MAX_UPLOAD_MB`, 500 MB por defecto) y el idioma: automático, español o inglés. El archivo viaja por partes; ver [Subidas por partes](#subidas-por-partes).
 2. **Transcribir.** El job pasa por `transcribing` hasta `ready`. Mientras tanto, las ediciones responden 409.
 3. **Preset.** La tarjeta *Preset* elige el estilo, y *Comparar presets* compara varios. La vista en vivo pide `GET /api/jobs/{id}/segments` con el estilo candidato, sin guardarlo. El estilo se guarda con `PUT /style` tras una pausa corta.
 4. **Gancho.** La tarjeta *Gancho de apertura* añade el titular de los primeros segundos (ver abajo).
 5. **Palabras y estilo.** Corrige el texto o los tiempos de cada palabra y guárdalos. Los cambios de estilo regeneran el ASS sin volver a transcribir.
 6. **Exportar.** En *Exportar* renderizas un preview o el video completo, y descargas el MP4 cuando termina.
+
+### Subidas por partes
+
+Un archivo se sube en trozos de `chunk_bytes` (8 MB por defecto), y cada trozo es una petición aparte. La interfaz lo hace sola: si un trozo falla, lo reintenta tres veces, con esperas de 1, 3 y 9 s. Si eliges otra vez el mismo archivo, el servidor dice qué trozos tiene y solo se envían los que faltan. Para cancelar, `DELETE /api/uploads/{id}` borra los trozos al momento (204). Responde 404 si la subida no existe y 409 si se está completando. Una subida sin actividad durante 24 h se borra.
+
+Por API, el orden es este. Si `SUBS_API_KEY` está definida, añade `-H "X-Subs-Key: $SUBS_API_KEY"` a cada petición.
+
+1. `POST /api/uploads` con `{"filename", "size", "content_type"}` devuelve `upload_id`, `chunk_size` y `total_chunks`. Responde 400 si la extensión no es de video, 413 si el archivo supera `SUBS_MAX_UPLOAD_MB` y 507 si no hay espacio libre.
+2. `PUT /api/uploads/{upload_id}/chunks/{n}` manda el trozo `n` como cuerpo crudo, con `n` de 0 a `total_chunks - 1`. Todos miden `chunk_size`, salvo el último. Reenviar un trozo lo sustituye. Responde 409 si `n` está fuera de rango y 413 si el trozo supera `chunk_size`.
+3. `GET /api/uploads/{upload_id}` devuelve `received`, la lista de trozos que ya llegaron. Sirve para reanudar.
+4. `POST /api/uploads/{upload_id}/complete` arma el archivo y devuelve `job_id`. Acepta `preset`, `overrides`, `language` y `model_size`, todos opcionales, como `POST /api/jobs`. Responde 409 si faltan trozos y 400 si el tamaño no cuadra.
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"filename":"video.mp4","size":123456789,"content_type":"video/mp4"}' \
+  http://127.0.0.1:8765/api/uploads
+curl -X PUT --data-binary @trozo-0.bin http://127.0.0.1:8765/api/uploads/<upload_id>/chunks/0
+curl -X POST -H "Content-Type: application/json" -d '{"preset":"ken_remedie"}' \
+  http://127.0.0.1:8765/api/uploads/<upload_id>/complete
+```
+
+`POST /api/jobs` sigue aceptando el archivo entero en un formulario. Detrás de Cloudflare, sirve solo para archivos de hasta 100 MB.
 
 ### Gancho de apertura
 
@@ -215,7 +238,7 @@ data/             generado: jobs/, jobs.db y subs.lock (no va a git)
 - Los presets se leen una vez por proceso: reinicia el servidor después de editarlos.
 - Las fuentes deben ser estáticas (`.ttf` u `.otf`). Los archivos variables, con `[` en el nombre, se excluyen de la medida y del quemado.
 - La calidad por palabra depende de Whisper. `small` es el modelo por defecto.
-- No hay autenticación de usuarios: solo la clave opcional `SUBS_API_KEY`. Subir o renderizar exige espacio libre: al menos 500 MB, o el triple del video si pesa más. Si no hay, responde 507. `data/` crece con cada job.
+- No hay autenticación de usuarios: solo la clave opcional `SUBS_API_KEY`. Subir o renderizar exige espacio libre: al menos 500 MB, o el triple del video si pesa más (en subidas por partes, el triple más 500 MB). Si no hay, responde 507. `data/` crece con cada job.
 - Los presets son aproximaciones a los estilos de referencia. No son copias de las cuentas.
 
 ## Publicar en Cloudflare
@@ -226,7 +249,7 @@ El sitio público es un Worker de Cloudflare con assets estáticos (`deploy/clou
 
 - **Puerta de acceso.** La contraseña del sitio (`SITE_PASSWORD`) abre una sesión: cookie `HttpOnly`, `Secure` y `SameSite=Lax`, firmada con `SESSION_SECRET`, de 30 días. Sin sesión, todo redirige a `/login`, salvo el CSS del sistema de diseño y el logo.
 - **Proxy.** `/api/*` y `/fonts/*` se reenvían a `BACKEND_URL` con la cabecera `X-Subs-Key`, así que la clave nunca llega al navegador. El cuerpo viaja en streaming: subidas y descargas no pasan por memoria. Si el backend no responde, la respuesta es 503.
-- **Backend.** Corre en este Mac (uvicorn en el 8765, con `SUBS_API_KEY` y `SUBS_MAX_UPLOAD_MB=95`) y se expone con un túnel rápido de Cloudflare (`cloudflared tunnel --url http://127.0.0.1:8765`). No necesita cuenta ni dominio.
+- **Backend.** Corre en este Mac (uvicorn en el 8765, con `SUBS_API_KEY` y `SUBS_MAX_UPLOAD_MB=500`) y se expone con un túnel rápido de Cloudflare (`cloudflared tunnel --url http://127.0.0.1:8765`). No necesita cuenta ni dominio.
 
 ### Comandos
 
@@ -254,12 +277,12 @@ Para el arranque automático, da Acceso total al disco a `/bin/bash` y al Python
 
 ### Límites
 
-- **Subida: 95 MB.** Cloudflare acepta 100 MB por petición.
+- **Subida: 500 MB por archivo, en partes de 8 MB.** Cloudflare corta a los 100 s las peticiones que no terminan. El Worker reenvía cada parte en streaming, sin leerla entera. Las subidas grandes van por partes: ver [Subidas por partes](#subidas-por-partes).
 - **El Mac tiene que estar encendido y con red.** `caffeinate -i` evita la suspensión por inactividad, pero no la suspensión al cerrar la tapa con batería.
 - **La URL del túnel cambia al reiniciarlo.** `tunnel.sh` la actualiza en el Worker en pocos segundos; no hace falta redesplegar.
 - **Cerrar sesión no revoca la cookie.** Sigue valiendo hasta que caduca o cambia `SESSION_SECRET`.
 - **No hay límite de intentos de contraseña.** Cada intento fallido espera 800 ms. Para limitarlos de verdad, añade una regla de límite de tasa en Cloudflare.
-- **Por la URL del túnel, sin contraseña, responden la interfaz estática, `/docs` y `/openapi.json`.** La API y los datos exigen `X-Subs-Key`, pero el esquema de la API queda público.
+- **Por la URL del túnel, sin clave, `/api/*` responde 401 y el resto 404.** Con `SUBS_API_KEY`, el backend no sirve la interfaz, `/docs` ni `/openapi.json`: la interfaz la sirve el Worker.
 - **Con `SUBS_API_KEY` definida, el 8765 local pide clave.** Para desarrollo local sin clave, usa `PORT=8766 scripts/dev.sh`.
 
 ### Subir a un dominio propio

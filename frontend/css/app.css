@@ -102,6 +102,7 @@ h1[tabindex="-1"]:focus, #view:focus { outline: none; }
 .form__msg { margin-top: var(--cf-space-4); min-height: 20px; }
 .progress__head { display: flex; align-items: center; justify-content: space-between; gap: var(--cf-space-3); margin-bottom: var(--cf-space-4); }
 .progress__detail { margin-top: var(--cf-space-3); }
+.progress__actions { margin-top: var(--cf-space-3); }
 
 /* Presets: grid de tarjetas con miniatura real (o muestra CSS). La media es 3:4; en compacto, 16:9. */
 .preset-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--cf-space-3); min-width: 0; }

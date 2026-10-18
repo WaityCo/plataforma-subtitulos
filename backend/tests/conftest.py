@@ -43,12 +43,16 @@ def start_app(tmp_path):
     stack = contextlib.ExitStack()
     engines: list = []
 
-    def _start(*, engine=None, max_upload_bytes=None, data_dir=None, frontend_dir=None, presets_dir=None):
+    def _start(
+        *, engine=None, max_upload_bytes=None, chunk_bytes=None, data_dir=None, frontend_dir=None, presets_dir=None
+    ):
         engine = FakeEngine() if engine is None else engine
         engines.append(engine)
         settings = Settings(data_dir=data_dir or tmp_path / "data")
         if max_upload_bytes is not None:
             settings = replace(settings, max_upload_bytes=max_upload_bytes)
+        if chunk_bytes is not None:
+            settings = replace(settings, chunk_bytes=chunk_bytes)
         app = create_app(settings=settings, engine=engine, frontend_dir=frontend_dir, presets_dir=presets_dir)
         client = stack.enter_context(TestClient(app))
         return client, engine

@@ -31,7 +31,7 @@ def test_preflight_de_un_origen_permitido_da_credenciales(cliente):
     assert response.headers["access-control-allow-credentials"] == "true"
 
 
-@pytest.mark.parametrize("metodo", ["GET", "POST", "PUT"])
+@pytest.mark.parametrize("metodo", ["GET", "POST", "PUT", "DELETE"])
 def test_los_metodos_de_la_api_estan_permitidos(cliente, metodo):
     response = cliente.options("/api/jobs/x/words", headers={"Origin": ORIGEN, "Access-Control-Request-Method": metodo})
 
