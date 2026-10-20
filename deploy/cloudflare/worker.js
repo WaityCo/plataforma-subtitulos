@@ -27,7 +27,10 @@ const PROXY_METHODS = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"];
 const HOP_BY_HOP = new Set([
   "connection", "keep-alive", "transfer-encoding", "upgrade", "proxy-authenticate", "proxy-authorization", "te", "trailer", "set-cookie",
 ]);
-const UNAVAILABLE = "El servidor de procesamiento no está disponible. Intenta en unos minutos.";
+const UNAVAILABLE = "El servidor se está reiniciando. Intenta de nuevo en unos segundos.";
+// Respuestas con las que Cloudflare avisa de que el túnel o el backend no responden. Un JSON del backend no cuenta:
+// sus errores llegan con su detail y pasan tal cual.
+const OUTAGE_STATUSES = new Set([502, 503, 504, 520, 521, 522, 523, 530]);
 const encoder = new TextEncoder();
 
 export default {
@@ -56,7 +59,7 @@ async function proxy(request, env) {
   const backend = (env.BACKEND_URL || "").replace(/\/+$/, "");
   if (!backend || !env.SUBS_API_KEY) {
     console.error("Faltan BACKEND_URL o SUBS_API_KEY en los secretos del Worker.");
-    return unavailable();
+    return unavailable(request);
   }
   const url = new URL(request.url);
   const headers = forwardedHeaders(request.headers, env.SUBS_API_KEY);
@@ -68,7 +71,11 @@ async function proxy(request, env) {
     upstream = await fetch(`${backend}${url.pathname}${url.search}`, init);
   } catch (error) {
     console.error("Backend inaccesible:", error?.message ?? String(error));
-    return unavailable();
+    return unavailable(request);
+  }
+  if (isOutage(upstream)) {
+    console.error("Backend sin responder, estado", upstream.status);
+    return unavailable(request);
   }
   return relay(upstream, request.method, backend);
 }
@@ -96,10 +103,60 @@ function relay(upstream, method, backend) {
   return new Response(bodiless ? null : upstream.body, { status: upstream.status, statusText: upstream.statusText, headers });
 }
 
-function unavailable() {
+// Cloudflare contesta con HTML cuando el túnel cae; el JSON del backend se deja pasar.
+function isOutage(upstream) {
+  const type = upstream.headers.get("content-type") || "";
+  return OUTAGE_STATUSES.has(upstream.status) && !type.includes("application/json");
+}
+
+// Navegación (una pestaña que abre /api/...): página que se reintenta sola. La app recibe JSON con detail.
+function unavailable(request) {
+  const navegacion = request.method === "GET" && (request.headers.get("accept") || "").includes("text/html");
+  if (navegacion) return reconnectingPage();
   return new Response(JSON.stringify({ detail: UNAVAILABLE }), {
     status: 503,
-    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
+    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "Retry-After": "10" },
+  });
+}
+
+function reconnectingPage() {
+  return new Response(`<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="refresh" content="10">
+  <title>Reiniciando · Click-Flow Subtítulos</title>
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--cf-color-canvas); color: var(--cf-color-ink); font-family: var(--cf-font-sans); }
+    .reinicio { width: min(92vw, 380px); display: grid; gap: 16px; padding: 28px; box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <main class="cf-card reinicio" aria-labelledby="reinicio-titulo" aria-live="polite">
+    <div class="cf-brand">
+      <img class="cf-brand__logo" src="/assets/logo.svg" width="34" height="34" alt="">
+      <div class="cf-brand__text">
+        <span class="cf-brand__name">Click-Flow</span>
+        <span class="cf-brand__by">Subtítulos</span>
+      </div>
+    </div>
+    <h1 class="t-page" id="reinicio-titulo">El servidor se está reiniciando</h1>
+    <p class="t-body">Reintentando en unos segundos…</p>
+    <p class="cf-field__hint">Esta página se vuelve a cargar sola cada 10 s.</p>
+  </main>
+</body>
+</html>`, {
+    status: 503,
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store",
+      "Retry-After": "10",
+      "X-Robots-Tag": "noindex, nofollow",
+    },
   });
 }
 

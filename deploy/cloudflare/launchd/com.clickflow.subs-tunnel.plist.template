@@ -6,8 +6,6 @@
   <string>com.clickflow.subs-tunnel</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/bin/caffeinate</string>
-    <string>-i</string>
     <string>/bin/bash</string>
     <string>__ROOT__/deploy/cloudflare/tunnel.sh</string>
   </array>
@@ -19,6 +17,8 @@
     <string>__HOME__</string>
     <key>PATH</key>
     <string>/opt/homebrew/bin:__HOME__/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>SUBS_DATA_DIR</key>
+    <string>__DATA__</string>
   </dict>
   <key>RunAtLoad</key>
   <true/>
@@ -27,8 +27,8 @@
   <key>ThrottleInterval</key>
   <integer>10</integer>
   <key>StandardOutPath</key>
-  <string>__ROOT__/data/logs/tunnel.log</string>
+  <string>__DATA__/logs/tunnel.log</string>
   <key>StandardErrorPath</key>
-  <string>__ROOT__/data/logs/tunnel.log</string>
+  <string>__DATA__/logs/tunnel.log</string>
 </dict>
 </plist>

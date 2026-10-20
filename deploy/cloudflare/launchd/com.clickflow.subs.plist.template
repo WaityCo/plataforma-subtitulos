@@ -17,6 +17,8 @@
     <string>__HOME__</string>
     <key>PATH</key>
     <string>/opt/homebrew/bin:__HOME__/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>SUBS_DATA_DIR</key>
+    <string>__DATA__</string>
   </dict>
   <key>RunAtLoad</key>
   <true/>
@@ -25,8 +27,8 @@
   <key>ThrottleInterval</key>
   <integer>10</integer>
   <key>StandardOutPath</key>
-  <string>__ROOT__/data/logs/backend.log</string>
+  <string>__DATA__/logs/backend.log</string>
   <key>StandardErrorPath</key>
-  <string>__ROOT__/data/logs/backend.log</string>
+  <string>__DATA__/logs/backend.log</string>
 </dict>
 </plist>

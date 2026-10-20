@@ -248,14 +248,15 @@ El sitio público es un Worker de Cloudflare con assets estáticos (`deploy/clou
 ### Arquitectura
 
 - **Puerta de acceso.** La contraseña del sitio (`SITE_PASSWORD`) abre una sesión: cookie `HttpOnly`, `Secure` y `SameSite=Lax`, firmada con `SESSION_SECRET`, de 30 días. Sin sesión, todo redirige a `/login`, salvo el CSS del sistema de diseño y el logo.
-- **Proxy.** `/api/*` y `/fonts/*` se reenvían a `BACKEND_URL` con la cabecera `X-Subs-Key`, así que la clave nunca llega al navegador. El cuerpo viaja en streaming: subidas y descargas no pasan por memoria. Si el backend no responde, la respuesta es 503.
-- **Backend.** Corre en este Mac (uvicorn en el 8765, con `SUBS_API_KEY` y `SUBS_MAX_UPLOAD_MB=500`) y se expone con un túnel rápido de Cloudflare (`cloudflared tunnel --url http://127.0.0.1:8765`). No necesita cuenta ni dominio.
+- **Proxy.** `/api/*` y `/fonts/*` se reenvían a `BACKEND_URL` con la cabecera `X-Subs-Key`, así que la clave nunca llega al navegador. El cuerpo viaja en streaming: subidas y descargas no pasan por memoria. Si el backend no responde (502, 503, 504 o 530 de Cloudflare, o un fallo de red), el Worker contesta con una página que se reintenta sola cada 10 s si es una navegación, o con JSON 503 y `detail` si lo pide la app.
+- **Backend.** Corre en este Mac como dos LaunchAgents, desde el clon `~/Services/clickflow-subs` (ver [Runtime y launchd](#runtime-y-launchd)). Sirve uvicorn en el 8765 y lo publica con un túnel rápido de Cloudflare (`cloudflared tunnel --url http://127.0.0.1:8765`), sin cuenta ni dominio.
 
 ### Comandos
 
 ```bash
-deploy/cloudflare/deploy.sh    # genera build/, despliega el Worker y sube los secretos
-deploy/cloudflare/tunnel.sh    # túnel rápido; si cambia su URL, actualiza BACKEND_URL en el Worker
+deploy/cloudflare/deploy.sh                                   # genera build/, despliega el Worker y sube los secretos
+deploy/cloudflare/install-launchd.sh [install|status|uninstall]    # agentes de launchd
+deploy/cloudflare/update-runtime.sh                               # trae GitHub al runtime y reinicia los agentes
 ```
 
 Los secretos están en `deploy/cloudflare/.secrets.env` (permisos 600, ignorado por git). `deploy.sh` genera solo los que faltan: la contraseña del sitio se muestra únicamente en la primera ejecución.
@@ -264,21 +265,36 @@ Los secretos están en `deploy/cloudflare/.secrets.env` (permisos 600, ignorado 
 
 Edita `SITE_PASSWORD` en `deploy/cloudflare/.secrets.env` y vuelve a ejecutar `deploy/cloudflare/deploy.sh`. Para cerrar todas las sesiones abiertas, cambia `SESSION_SECRET` del mismo modo: las cookies firmadas con el valor anterior dejan de valer.
 
-### Arranque: a mano o con launchd
+### Runtime y launchd
 
-Mientras launchd no tenga permiso para leer la carpeta del proyecto, el backend y el túnel se arrancan a mano desde la raíz del proyecto:
+El backend y el túnel no corren desde la copia de trabajo en `~/Documents`: launchd no puede leer esa carpeta sin acceso total al disco. Corren desde un clon de Git en `~/Services/clickflow-subs`, con su propio `.venv` y su copia de `deploy/cloudflare/.secrets.env` (permisos 600). Los datos están fuera del repositorio, en `~/Services/clickflow-subs-data` (`SUBS_DATA_DIR`), y `update-runtime.sh` no los toca.
+
+| Agente | Ejecuta | Logs |
+|---|---|---|
+| `com.clickflow.subs` | `run-backend.sh`: uvicorn en el 8765 | `logs/backend.log` |
+| `com.clickflow.subs-tunnel` | `tunnel.sh`: cloudflared y el vigilante | `logs/tunnel.log`, `logs/cloudflared.log` |
+
+Los dos agentes arrancan al iniciar sesión (`RunAtLoad`) y se reinician si paran (`KeepAlive`, con 10 s de pausa). `caffeinate -s` evita que el Mac se duerma mientras el backend corre con corriente.
 
 ```bash
-nohup deploy/cloudflare/run-backend.sh >> data/logs/backend.log 2>&1 &
-nohup deploy/cloudflare/tunnel.sh >> data/logs/tunnel.log 2>&1 &
+cd ~/Services/clickflow-subs
+deploy/cloudflare/install-launchd.sh status     # cargados, con su pid
+deploy/cloudflare/install-launchd.sh install    # carga o recarga los dos agentes
+tail -f ~/Services/clickflow-subs-data/logs/tunnel.log
 ```
 
-Para el arranque automático, da Acceso total al disco a `/bin/bash` y al Python del `.venv` en Ajustes del Sistema, Privacidad y seguridad, y ejecuta `deploy/cloudflare/install-launchd.sh install`. `install-launchd.sh uninstall` los quita.
+**Vigilante.** Cada 60 s, `tunnel.sh` comprueba el backend en local, el túnel y el camino completo Worker → túnel. Si el túnel falla 3 veces seguidas con el backend sano, reinicia cloudflared. Si el Worker falla 3 veces seguidas con el túnel sano, vuelve a fijar `BACKEND_URL`. Si la red cae al actualizar el secreto, reintenta con esperas de 5 s a 60 s. Cada evento queda en `tunnel.log`.
+
+**Actualizar.** Trabaja en `~/Documents`, haz commit y push a `main` y ejecuta `deploy/cloudflare/update-runtime.sh` desde el runtime. El script hace `git pull --ff-only`, instala dependencias solo si cambió un requirements, reinicia los dos agentes y comprueba que responden. Si el clon tiene cambios sin commit, se detiene.
+
+**Secretos.** El `.secrets.env` del runtime es el que cuenta, porque `BACKEND_URL` cambia cada vez que cambia el túnel. No ejecutes `deploy.sh` desde la copia de `~/Documents`: su `BACKEND_URL` queda desactualizado en cuanto el túnel cambia.
 
 ### Límites
 
 - **Subida: 500 MB por archivo, en partes de 8 MB.** Cloudflare corta a los 100 s las peticiones que no terminan. El Worker reenvía cada parte en streaming, sin leerla entera. Las subidas grandes van por partes: ver [Subidas por partes](#subidas-por-partes).
-- **El Mac tiene que estar encendido y con red.** `caffeinate -i` evita la suspensión por inactividad, pero no la suspensión al cerrar la tapa con batería.
+- **El Mac tiene que estar encendido y con red.** `caffeinate -s` solo impide la suspensión con corriente: con la tapa cerrada y sin pantalla externa, el Mac se duerme.
+- **Arranque tras un reinicio.** Los agentes arrancan al iniciar sesión. Con FileVault, tras reiniciar hay que introducir la contraseña, y el sitio no vuelve hasta entonces.
+- **Comandos de energía recomendados.** Los ejecuta el dueño, porque piden sudo: `sudo pmset -c sleep 0 disksleep 0` (no dormir con corriente) y `sudo pmset autorestart 1` (encender tras un corte de corriente).
 - **La URL del túnel cambia al reiniciarlo.** `tunnel.sh` la actualiza en el Worker en pocos segundos; no hace falta redesplegar.
 - **Cerrar sesión no revoca la cookie.** Sigue valiendo hasta que caduca o cambia `SESSION_SECRET`.
 - **No hay límite de intentos de contraseña.** Cada intento fallido espera 800 ms. Para limitarlos de verdad, añade una regla de límite de tasa en Cloudflare.
