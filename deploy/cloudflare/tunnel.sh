@@ -103,7 +103,7 @@ while true; do
   log "cloudflared arrancado (pid $CHILD)"
   url=""
   for _ in $(seq 1 90); do
-    url="$(grep -Eo 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG_DIR/cloudflared.log" | head -n 1 || true)"
+    url="$(grep -aEo 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG_DIR/cloudflared.log" | head -n 1 || true)"
     [ -n "$url" ] && break
     kill -0 "$CHILD" 2>/dev/null || break
     sleep 1
