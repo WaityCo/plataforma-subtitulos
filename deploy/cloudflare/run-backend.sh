@@ -10,6 +10,9 @@ SUBS_API_KEY="$(read_secret SUBS_API_KEY)"
 export SUBS_API_KEY
 export SUBS_MAX_UPLOAD_MB="$MAX_UPLOAD_MB"
 export SUBS_DATA_DIR="$DATA_DIR"
+# Sitio público (Worker): el banner de la versión local consulta /api/local-ping desde su navegador. Sale de state/public_url.
+PUBLIC_URL="$(cat "$STATE_DIR/public_url" 2>/dev/null || true)"
+if [ -n "$PUBLIC_URL" ]; then export SUBS_PUBLIC_ORIGINS="$PUBLIC_URL"; fi
 mkdir -p "$DATA_DIR" "$LOG_DIR" "$STATE_DIR"
 cd "$ROOT"
 "$PY" -m uvicorn backend.app:app --host 127.0.0.1 --port "$BACKEND_PORT" &

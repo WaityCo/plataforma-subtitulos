@@ -21,8 +21,8 @@ from starlette.datastructures import FormData, UploadFile
 from starlette.formparsers import MultiPartException, MultiPartParser
 
 from . import __version__, thumbs
-from .acceso import ClaveDeAcceso
-from .config import MB, MIN_PREVIEW_SECONDS, MODEL_SIZES, PROJECT_ROOT, Settings, resolve_default_preset
+from .acceso import ClaveDeAcceso, PingLocal, es_local
+from .config import LOCAL_CHUNK_BYTES, MB, MIN_PREVIEW_SECONDS, MODEL_SIZES, PROJECT_ROOT, Settings, resolve_default_preset
 from .engine_bridge import FONTS_DIR, EngineUnavailable, RealEngine
 from .jobs import ASS_FILE, OUTPUT_FILE, PREVIEW_FILE, JobError, JobManager, comprobar_espacio, error_de_espacio
 from .media import UPLOAD_TYPES, InvalidVideo, probe_video, validate_upload
@@ -202,12 +202,16 @@ def _registrar_correo_access(request: Request, job_id: str, accion: str) -> None
 
 @router.get("/config")
 def get_config(request: Request) -> dict[str, Any]:
-    # Lo que el frontend necesita para mostrar los límites reales, sin copiarlos a mano.
+    # Lo que el frontend necesita para mostrar los límites reales, sin copiarlos a mano. Desde el Mac (local) los
+    # trozos son de LOCAL_CHUNK_BYTES y se envían de uno en uno.
     settings: Settings = request.app.state.settings
+    local = es_local(request.scope)
     return {
         "max_upload_mb": settings.max_upload_bytes // MB,
         "max_upload_bytes": settings.max_upload_bytes,
-        "chunk_bytes": settings.chunk_bytes,
+        "chunk_bytes": LOCAL_CHUNK_BYTES if local else settings.chunk_bytes,
+        "upload_concurrency": 1 if local else settings.upload_concurrency,
+        "local": local,
         "default_preset": request.app.state.default_preset,
         "version": __version__,
     }
@@ -298,8 +302,10 @@ def _uploads(request: Request) -> UploadManager:
 
 @router.post("/uploads", status_code=201)
 def create_upload(body: UploadIn, request: Request) -> dict[str, Any]:
-    # Antes de aceptar ningún trozo: extensión (400), tamaño (413) y disco (507).
-    return _uploads(request).create(body.filename, body.size, body.content_type or "")
+    # Antes de aceptar ningún trozo: extensión (400), tamaño (413) y disco (507). El tamaño de trozo queda guardado
+    # con la subida, así que los PUT posteriores se miden con él.
+    trozo = LOCAL_CHUNK_BYTES if es_local(request.scope) else None
+    return _uploads(request).create(body.filename, body.size, body.content_type or "", chunk_bytes=trozo)
 
 
 @router.get("/uploads/{upload_id}")
@@ -554,7 +560,8 @@ def create_app(
             uploads.stop()
             manager.stop()
 
-    # Con clave, la API va detrás de un proxy: no se publican documentación ni la interfaz (la sirve un Worker).
+    # Con clave, la API va detrás de un proxy y no se publica la documentación. La interfaz solo llega a peticiones
+    # locales (acceso.py): por el túnel la sirve el Worker.
     ocultar = bool(settings.api_key)
     app = FastAPI(
         title="Plataforma de subtítulos",
@@ -582,6 +589,8 @@ def create_app(
             allow_headers=["Content-Type", "If-None-Match", "Range"],
             expose_headers=["X-Frame-Time", "X-Empty", "ETag"],
         )
+    # El último añadido es el más externo: el ping responde antes que CORS y que la clave.
+    app.add_middleware(PingLocal, origenes=settings.public_origins)
     app.add_exception_handler(JobError, _job_error)
     app.add_exception_handler(EngineUnavailable, _engine_unavailable)
     app.add_exception_handler(InvalidVideo, _invalid_video)
@@ -590,12 +599,11 @@ def create_app(
     app.add_exception_handler(RequestValidationError, _validation_error)
     # Montajes siempre presentes: frontend/ puede crearse después del arranque. Las rutas /api van antes.
     app.mount("/fonts", _OptionalStaticFiles(directory=FONTS_DIR, check_dir=False), name="fonts")
-    if not ocultar:
-        app.mount(
-            "/",
-            _OptionalStaticFiles(directory=frontend_dir or FRONTEND_DIR, html=True, check_dir=False),
-            name="frontend",
-        )
+    app.mount(
+        "/",
+        _OptionalStaticFiles(directory=frontend_dir or FRONTEND_DIR, html=True, check_dir=False),
+        name="frontend",
+    )
     return app
 
 

@@ -67,6 +67,20 @@ h1[tabindex="-1"]:focus, #view:focus { outline: none; }
 .app__main { min-width: 0; padding: var(--cf-space-8) var(--cf-space-10) var(--cf-space-12); }
 .app__topbar { display: none; }
 .app__content { max-width: var(--cf-content-max); }
+
+/* Banner de la versión local (local.js): solo en el sitio público y si el Mac responde. Vacío, no ocupa sitio. */
+.app__local-slot:empty { display: none; }
+.app__local {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cf-space-3);
+  margin-bottom: var(--cf-space-5);
+  padding: var(--cf-space-3) var(--cf-space-4);
+  border-radius: var(--cf-radius-card);
+  background: var(--cf-color-surface);
+}
+.app__local-text { flex: 1 1 260px; margin: 0; color: var(--cf-color-ink); }
 .app__scrim { position: fixed; inset: 0; z-index: 30; background: rgba(21, 21, 23, 0.14); }
 
 .app__help-dialog {

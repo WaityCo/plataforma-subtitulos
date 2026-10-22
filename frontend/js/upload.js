@@ -1,7 +1,8 @@
 // Subida de un video. Con chunk_bytes en /api/config va por trozos (api.js: uploadClient): cada trozo se reintenta
 // 3 veces con esperas de 1, 3 y 9 s, y un 4xx (413, 507, 409, 400...) no se reintenta. Sin chunk_bytes, el archivo
-// entero va a POST /api/jobs. Lo subido se guarda en localStorage (subs.uploads): si el mismo archivo se elige otra
-// vez, el servidor dice qué trozos tiene y solo se envían los que faltan.
+// entero va a POST /api/jobs. Los trozos se envían upload_concurrency a la vez (1 desde el Mac, 3 por el túnel).
+// Lo subido se guarda en localStorage (subs.uploads): si el mismo archivo se elige otra vez, el servidor dice qué
+// trozos tiene y solo se envían los que faltan.
 import { ApiError, createJob, uploadClient } from "./api.js";
 
 export const RETRY_DELAYS = [1000, 3000, 9000];
@@ -9,6 +10,7 @@ export const RETRY_DELAYS = [1000, 3000, 9000];
 const RETRYABLE = new Set([0, 408, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524]);
 const KEY = "subs.uploads";
 const SPEED_WINDOW_MS = 3000;
+const MAX_CONCURRENCY = 8; // el mismo tope que el servidor (SUBS_UPLOAD_CONCURRENCY)
 
 // Lo que lanza una subida cancelada. Los demás fallos llegan como ApiError (status 0 si es la red).
 export class UploadCancelled extends Error {
@@ -131,36 +133,69 @@ export async function sendVideo({ file, preset, language, overrides, config, sig
   const length = (n) => Math.min(file.size, (n + 1) * size) - n * size;
   const have = new Set(session.received.filter((n) => n < count));
   const missing = Array.from({ length: count }, (_, n) => n).filter((n) => !have.has(n));
-  let sent = [...have].reduce((sum, n) => sum + length(n), 0);
-  const measure = meter(file.size, sent, now);
-  const report = (bytes) => onProgress({ sent: bytes, total: file.size, ...measure(bytes) });
+  const concurrency = Math.min(MAX_CONCURRENCY, Math.max(1, Math.floor(Number(config.upload_concurrency) || 1)));
+  let finished = [...have].reduce((sum, n) => sum + length(n), 0); // bytes de los trozos ya terminados
+  const inFlight = new Map(); // trozo -> bytes enviados de su intento actual
+  const measure = meter(file.size, finished, now);
+  const report = () => {
+    let bytes = finished;
+    for (const loaded of inFlight.values()) bytes += loaded;
+    onProgress({ sent: bytes, total: file.size, ...measure(bytes) });
+  };
 
   onState({ kind: have.size ? "resume" : "start", done: have.size, total: count });
-  report(sent);
-  try {
-    for (const n of missing) {
-      const blob = file.slice(n * size, n * size + length(n));
-      for (let attempt = 0; ; attempt += 1) {
-        try {
-          await client.chunk(id, n, blob, { signal, onProgress: (loaded) => report(sent + loaded) });
-          break;
-        } catch (error) {
-          if (signal?.aborted) throw new UploadCancelled();
-          if (!retryable(error) || attempt === RETRY_DELAYS.length) throw error;
-          onState({ kind: "retry", chunk: n, total: count, attempt: attempt + 1, delay: RETRY_DELAYS[attempt], message: error.message });
-          await wait(RETRY_DELAYS[attempt], signal);
-        }
+  report();
+
+  // Cancelar el usuario o un fallo sin reintento para los trozos en curso. Ninguno nuevo empieza después.
+  const stop = new AbortController();
+  const halt = () => stop.abort();
+  if (signal?.aborted) halt();
+  else signal?.addEventListener("abort", halt, { once: true });
+
+  async function sendChunk(n) {
+    const blob = file.slice(n * size, n * size + length(n));
+    for (let attempt = 0; ; attempt += 1) {
+      inFlight.set(n, 0);
+      try {
+        await client.chunk(id, n, blob, { signal: stop.signal, onProgress: (loaded) => { inFlight.set(n, loaded); report(); } });
+        break;
+      } catch (error) {
+        inFlight.delete(n);
+        if (signal?.aborted) throw new UploadCancelled();
+        // Otro trozo ya ha fallado sin reintento: este se para sin reintentar.
+        if (stop.signal.aborted) throw error;
+        if (!retryable(error) || attempt === RETRY_DELAYS.length) throw error;
+        onState({ kind: "retry", chunk: n, total: count, attempt: attempt + 1, delay: RETRY_DELAYS[attempt], message: error.message });
+        await wait(RETRY_DELAYS[attempt], stop.signal);
       }
-      sent += length(n);
-      report(sent);
     }
+    inFlight.delete(n);
+    finished += length(n);
+    report();
+  }
+
+  // Cada carril toma el siguiente trozo pendiente. Con concurrency 1 es el envío de uno en uno de siempre.
+  let next = 0;
+  const lanes = Array.from({ length: Math.min(concurrency, missing.length) }, async () => {
+    while (next < missing.length) {
+      const n = missing[next];
+      next += 1;
+      await sendChunk(n);
+    }
+  });
+
+  try {
+    await Promise.all(lanes);
   } catch (error) {
+    stop.abort();
     if (error instanceof UploadCancelled) {
       // Cancelar borra la subida en el servidor. No se espera la respuesta: la pantalla ya dice que se canceló.
       store.forget(id);
       client.remove(id).catch(() => {});
     }
     throw error;
+  } finally {
+    signal?.removeEventListener("abort", halt);
   }
 
   onState({ kind: "complete" });

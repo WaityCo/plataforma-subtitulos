@@ -3,6 +3,7 @@ import { api } from "./api.js";
 import { el } from "./dom.js";
 import { loadFonts } from "./fonts.js";
 import { icon } from "./icons.js";
+import { LOCAL_URL, localBanner, offerLocal } from "./local.js";
 import { parseRoute } from "./router.js";
 import { initShell, setRoute } from "./shell.js";
 import { mountEditor } from "./pages/editor.js";
@@ -80,3 +81,5 @@ function render() {
 hydrateIcons();
 initShell();
 boot();
+// En el sitio público, ofrece la versión local si el Mac responde. Sin respuesta no pasa nada.
+offerLocal({ base: LOCAL_URL, show: (base) => document.getElementById("local-banner").replaceChildren(localBanner(base)) }).catch(() => {});

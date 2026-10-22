@@ -128,7 +128,7 @@ class UploadManager:
 
     # Alta y estado
 
-    def create(self, filename: str, size: int, content_type: str) -> dict[str, Any]:
+    def create(self, filename: str, size: int, content_type: str, chunk_bytes: int | None = None) -> dict[str, Any]:
         ext = validate_upload(filename, content_type)  # 400: extensión o content-type que no corresponde
         if size > self.settings.max_upload_bytes:
             raise UploadTooLarge(f"El archivo es demasiado grande (límite: {self.settings.max_upload_bytes / MB:g} MB).")
@@ -139,7 +139,7 @@ class UploadManager:
         upload_id = uuid.uuid4().hex
         carpeta = self.root / upload_id
         (carpeta / CHUNKS_DIR).mkdir(parents=True)
-        chunk = self.settings.chunk_bytes
+        chunk = chunk_bytes or self.settings.chunk_bytes  # desde el Mac, trozos más grandes (ver app.create_upload)
         total = math.ceil(size / chunk)
         _escribir_json(carpeta / META_FILE, {"ext": ext, "size": size, "chunk_size": chunk, "total_chunks": total})
         return {"upload_id": upload_id, "chunk_size": chunk, "total_chunks": total}

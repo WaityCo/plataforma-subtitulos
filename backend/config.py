@@ -2,12 +2,14 @@
 
 SUBS_DATA_DIR (data/): carpeta de jobs, base SQLite y subs.lock. Una ruta relativa cuelga de la raíz.
 SUBS_MAX_UPLOAD_MB (1024): tamaño máximo de subida, en MB. Entero mayor que 0.
-SUBS_CHUNK_MB (8): tamaño de cada trozo de la subida por partes, en MB. Entero de 1 a 90.
+SUBS_CHUNK_MB (8): tamaño de cada trozo de la subida por partes, en MB. Entero de 1 a 90. Desde el Mac, 64 MB.
+SUBS_UPLOAD_CONCURRENCY (3): trozos que se envían a la vez desde fuera del Mac. Entero de 1 a 8. Desde el Mac, uno.
 SUBS_DEFAULT_MODEL (small): modelo de Whisper si el formulario no pide otro.
 SUBS_MAX_PREVIEW_SECONDS (15): duración máxima del preview, en segundos. El mínimo es 1.
 SUBS_DEFAULT_PRESET (ken_remedie si el motor lo tiene; si no, ken_classic): preset si el formulario no pide otro.
 SUBS_CORS_ORIGINS (vacío): orígenes que pueden llamar a la API desde otro dominio, separados por comas. Vacío: solo mismo origen.
-SUBS_API_KEY (vacío): si se define, /api/* y /fonts/* exigen la cabecera X-Subs-Key con ese valor.
+SUBS_PUBLIC_ORIGINS (vacío): sitio público que puede consultar /api/local-ping para ofrecer la versión local. Mismo formato.
+SUBS_API_KEY (vacío): si se define, /api/* y /fonts/* exigen la cabecera X-Subs-Key con ese valor, salvo desde el Mac.
 Una variable vacía equivale a no definirla. Un valor no válido detiene el arranque.
 """
 
@@ -23,6 +25,8 @@ DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
 DEFAULT_MAX_UPLOAD_MB = 1024
 DEFAULT_CHUNK_MB = 8  # 8 MB tardan unos 28 s a 0,29 MB/s, por debajo de los 100 s de Cloudflare
 MAX_CHUNK_MB = 90  # Tope de configuración: a 0,29 MB/s, un trozo de más de unos 29 MB ya supera los 100 s
+DEFAULT_UPLOAD_CONCURRENCY = 3  # trozos en paralelo desde fuera del Mac
+MAX_UPLOAD_CONCURRENCY = 8
 DEFAULT_MODEL = "small"
 DEFAULT_MAX_PREVIEW_SECONDS = 15
 MIN_PREVIEW_SECONDS = 1
@@ -30,6 +34,7 @@ PREFERRED_PRESET = "ken_remedie"
 FALLBACK_PRESET = "ken_classic"
 MODEL_SIZES = frozenset({"tiny", "base", "small", "medium", "large-v2", "large-v3"})
 MB = 1024 * 1024
+LOCAL_CHUNK_BYTES = 64 * MB  # desde el Mac no pasa por Cloudflare: trozos grandes y menos peticiones
 
 
 class ConfigError(ValueError):
@@ -48,6 +53,8 @@ class Settings:
     cors_origins: tuple[str, ...] = ()  # vacío: solo mismo origen
     api_key: str | None = None  # None: la API no pide clave
     chunk_bytes: int = DEFAULT_CHUNK_MB * MB  # tamaño de cada trozo de la subida por partes
+    upload_concurrency: int = DEFAULT_UPLOAD_CONCURRENCY  # trozos a la vez desde fuera del Mac
+    public_origins: tuple[str, ...] = ()  # sitio público que puede consultar /api/local-ping
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> "Settings":
@@ -58,9 +65,11 @@ class Settings:
             default_model=_model(env.get("SUBS_DEFAULT_MODEL")),
             max_preview_seconds=_preview_seconds(env.get("SUBS_MAX_PREVIEW_SECONDS")),
             default_preset=_value(env.get("SUBS_DEFAULT_PRESET")),
-            cors_origins=_cors_origins(env.get("SUBS_CORS_ORIGINS")),
+            cors_origins=_origenes(env.get("SUBS_CORS_ORIGINS"), "SUBS_CORS_ORIGINS"),
             api_key=_value(env.get("SUBS_API_KEY")),
             chunk_bytes=_chunk_mb(env.get("SUBS_CHUNK_MB")) * MB,
+            upload_concurrency=_concurrency(env.get("SUBS_UPLOAD_CONCURRENCY")),
+            public_origins=_origenes(env.get("SUBS_PUBLIC_ORIGINS"), "SUBS_PUBLIC_ORIGINS"),
         )
 
 
@@ -120,6 +129,19 @@ def _chunk_mb(raw: str | None) -> int:
     return megabytes
 
 
+def _concurrency(raw: str | None) -> int:
+    value = _value(raw)
+    if value is None:
+        return DEFAULT_UPLOAD_CONCURRENCY
+    try:
+        number = int(value)
+    except ValueError as exc:
+        raise ConfigError(f"SUBS_UPLOAD_CONCURRENCY debe ser un entero: {value!r}.") from exc
+    if not 1 <= number <= MAX_UPLOAD_CONCURRENCY:
+        raise ConfigError(f"SUBS_UPLOAD_CONCURRENCY debe estar entre 1 y {MAX_UPLOAD_CONCURRENCY}: {value!r}.")
+    return number
+
+
 def _model(raw: str | None) -> str:
     value = _value(raw)
     if value is None:
@@ -143,8 +165,8 @@ def _preview_seconds(raw: str | None) -> float:
     return seconds
 
 
-def _cors_origins(raw: str | None) -> tuple[str, ...]:
-    """Orígenes de CORS separados por comas. Cada uno es esquema y host, sin ruta; una barra final se quita."""
+def _origenes(raw: str | None, variable: str) -> tuple[str, ...]:
+    """Orígenes separados por comas. Cada uno es esquema y host, sin ruta; una barra final se quita."""
     value = _value(raw)
     if value is None:
         return ()
@@ -156,7 +178,7 @@ def _cors_origins(raw: str | None) -> tuple[str, ...]:
         parts = urlsplit(origin)
         if parts.scheme not in ("http", "https") or not parts.hostname or parts.path or parts.query or parts.fragment:
             raise ConfigError(
-                f"SUBS_CORS_ORIGINS no admite {item.strip()!r}: usa esquema y host, por ejemplo https://app.example.com."
+                f"{variable} no admite {item.strip()!r}: usa esquema y host, por ejemplo https://app.example.com."
             )
         origins.append(origin)
     return tuple(origins)

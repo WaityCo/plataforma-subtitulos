@@ -14,6 +14,8 @@ def test_config_devuelve_limite_trozo_preset_y_version(start_app):
         "max_upload_mb": 100,
         "max_upload_bytes": 100 * MB,
         "chunk_bytes": 8 * MB,
+        "upload_concurrency": 3,
+        "local": False,
         "default_preset": "ken_classic",
         "version": __version__,
     }

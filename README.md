@@ -30,12 +30,14 @@ Los valores llegan por variables de entorno. Una variable vacía equivale a no d
 |---|---|---|---|
 | `SUBS_DATA_DIR` | `data/` | `backend/config.py` | Carpeta de jobs, base SQLite y `subs.lock`. Una ruta relativa cuelga de la raíz del proyecto. |
 | `SUBS_MAX_UPLOAD_MB` | `500` | `backend/config.py` | Tamaño máximo de un video, en MB. Entero mayor que 0. Los videos se suben por trozos, así que este tamaño no depende del límite por petición de Cloudflare. |
-| `SUBS_CHUNK_MB` | `8` | `backend/config.py` | Tamaño de cada trozo de la subida por partes, en MB. Entero de 1 a 90. Cloudflare corta a los 100 s las peticiones que no terminan: con el túnel a unos 0,29 MB/s, 8 MB tardan unos 28 s. |
+| `SUBS_CHUNK_MB` | `8` | `backend/config.py` | Tamaño de cada trozo de la subida por partes, en MB. Entero de 1 a 90. Cloudflare corta a los 100 s las peticiones que no terminan: con el túnel a unos 0,29 MB/s, 8 MB tardan unos 28 s. Desde el Mac se usan trozos de 64 MB (ver [Modo local](#modo-local)). |
+| `SUBS_UPLOAD_CONCURRENCY` | `3` | `backend/config.py` | Trozos que se envían a la vez desde fuera del Mac, de 1 a 8. Desde el Mac se envía uno. |
 | `SUBS_DEFAULT_MODEL` | `small` | `backend/config.py` | Modelo de Whisper si el formulario no pide `model_size`: `tiny`, `base`, `small`, `medium`, `large-v2` o `large-v3`. |
 | `SUBS_MAX_PREVIEW_SECONDS` | `15` | `backend/config.py` | Duración máxima del preview de render, en segundos. El mínimo es 1. |
 | `SUBS_DEFAULT_PRESET` | `ken_remedie` si el motor lo tiene; si no, `ken_classic` | `backend/config.py` | Preset si el formulario no pide `preset`. Con valor, debe existir entre los presets del motor. |
 | `SUBS_CORS_ORIGINS` | vacío: solo mismo origen | `backend/config.py` | Solo para desarrollo local: orígenes que pueden llamar a la API desde otro puerto o dominio, separados por comas (p. ej. `http://localhost:5173`). Con orígenes se permiten credenciales (cookies de Cloudflare Access). |
-| `SUBS_API_KEY` | vacío: la API no pide clave | `backend/acceso.py` | Si se define, toda petición a `/api/*` y `/fonts/*` debe llevar la cabecera `X-Subs-Key` con ese valor, o responde 401. Con clave, `/docs`, `/redoc`, `/openapi.json` y la interfaz no se sirven (404): los publica el Worker. |
+| `SUBS_PUBLIC_ORIGINS` | vacío: sin banner de versión local | `backend/config.py` | Orígenes del sitio público que pueden consultar `/api/local-ping` desde el navegador, para ofrecer la versión local (ver [Modo local](#modo-local)). `deploy/cloudflare/run-backend.sh` la rellena con `state/public_url`. |
+| `SUBS_API_KEY` | vacío: la API no pide clave | `backend/acceso.py` | Si se define, toda petición a `/api/*` y `/fonts/*` debe llevar la cabecera `X-Subs-Key` con ese valor, o responde 401. Con clave, `/docs`, `/redoc` y `/openapi.json` no se sirven (404). La interfaz solo llega desde el Mac (ver [Modo local](#modo-local)): por el sitio público la sirve el Worker. |
 | `FFMPEG_BIN` | ffmpeg-full de Homebrew, o el PATH | `engine/ffbin.py` | Ruta del ffmpeg. |
 | `FFPROBE_BIN` | ffprobe de ffmpeg-full, o el PATH | `engine/ffbin.py` | Ruta del ffprobe. |
 
@@ -68,7 +70,7 @@ En macOS, el script avisa si falta `ffmpeg-full`. La API arranca igual, pero sin
 
 ### Subidas por partes
 
-Un archivo se sube en trozos de `chunk_bytes` (8 MB por defecto), y cada trozo es una petición aparte. La interfaz lo hace sola: si un trozo falla, lo reintenta tres veces, con esperas de 1, 3 y 9 s. Si eliges otra vez el mismo archivo, el servidor dice qué trozos tiene y solo se envían los que faltan. Para cancelar, `DELETE /api/uploads/{id}` borra los trozos al momento (204). Responde 404 si la subida no existe y 409 si se está completando. Una subida sin actividad durante 24 h se borra.
+Un archivo se sube en trozos de `chunk_bytes`: 8 MB por el túnel y 64 MB desde el Mac (ver [Modo local](#modo-local)). Cada trozo es una petición aparte. Por el túnel se envían `SUBS_UPLOAD_CONCURRENCY` trozos a la vez (3 por defecto). La interfaz lo hace sola: si un trozo falla, lo reintenta tres veces, con esperas de 1, 3 y 9 s. Si eliges otra vez el mismo archivo, el servidor dice qué trozos tiene y solo se envían los que faltan. Para cancelar, `DELETE /api/uploads/{id}` borra los trozos al momento (204). Responde 404 si la subida no existe y 409 si se está completando. Una subida sin actividad durante 24 h se borra.
 
 Por API, el orden es este. Si `SUBS_API_KEY` está definida, añade `-H "X-Subs-Key: $SUBS_API_KEY"` a cada petición.
 
@@ -87,6 +89,18 @@ curl -X POST -H "Content-Type: application/json" -d '{"preset":"ken_remedie"}' \
 ```
 
 `POST /api/jobs` sigue aceptando el archivo entero en un formulario. Detrás de Cloudflare, sirve solo para archivos de hasta 100 MB.
+
+### Modo local
+
+Desde el Mac que sirve la plataforma, `http://127.0.0.1:8765` va directo al backend: no pasa por Cloudflare y no pide clave. Subir y bajar videos por esa dirección va a la velocidad del disco. Con `SUBS_API_KEY` definida, la interfaz solo se sirve por ella.
+
+- **Cómo se usa.** Abre `http://127.0.0.1:8765` en el Mac, con el servidor en marcha. En el sitio público aparece un banner («Estás en el Mac del servidor…») solo si el Mac responde a `GET /api/local-ping` en menos de 800 ms. Si no responde, no aparece nada.
+- **Qué cambia.** `GET /api/config` responde `"local": true`, con trozos de 64 MB y `upload_concurrency` 1: la subida va en trozos grandes, uno a la vez. Por el túnel, los trozos son de 8 MB y se envían `SUBS_UPLOAD_CONCURRENCY` a la vez.
+- **Qué cuenta como local.** Una petición que llega directa del Mac: el cliente es `127.0.0.1` o `::1`, el `Host` es `127.0.0.1`, `localhost` o `[::1]`, no lleva cabeceras de proxy (`cf-*`, `x-forwarded-*`, `cdn-loop`, `forwarded`, `x-real-ip`, `true-client-ip`) y, si lleva `Origin`, es el mismo de la petición.
+
+**Seguridad.** Por el túnel nada es local. Cloudflare conserva el `Host` del túnel y añade `Cf-Ray`, `Cdn-Loop` y `X-Forwarded-For`, lo que comprobamos con un eco detrás de un túnel rápido. Ahí siguen valiendo la clave y el 404 de la interfaz. El `Host` y el `Origin` cierran dos ataques desde el navegador: que otra web apunte su dominio a 127.0.0.1 (DNS rebinding) y que una web abierta en el mismo navegador escriba en la API (CSRF). Quien tenga sesión en el Mac puede usar la API sin clave, igual que ya podía leer `data/`. El ping solo responde a conexiones directas del Mac, y CORS solo da permiso a los orígenes de `SUBS_PUBLIC_ORIGINS`.
+
+**Límites.** Solo funciona en el mismo Mac: desde otro equipo, `127.0.0.1` es ese equipo y no el servidor. Safari no está probado. `deploy/cloudflare/run-backend.sh` rellena `SUBS_PUBLIC_ORIGINS` con `deploy/cloudflare/state/public_url`; en producción, el banner aparece tras actualizar el runtime (`update-runtime.sh`) y reiniciar el servicio.
 
 ### Gancho de apertura
 
