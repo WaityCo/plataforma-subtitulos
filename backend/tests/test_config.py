@@ -14,7 +14,7 @@ def test_valores_por_defecto():
     settings = Settings.from_env({})
 
     assert settings.data_dir == PROJECT_ROOT / "data"
-    assert settings.max_upload_bytes == 500 * MB
+    assert settings.max_upload_bytes == 1024 * MB
     assert settings.chunk_bytes == 8 * MB
     assert settings.default_model == "small"
     assert settings.max_preview_seconds == 15

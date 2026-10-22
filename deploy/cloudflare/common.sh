@@ -12,7 +12,7 @@ LOG_DIR="$DATA_DIR/logs"
 PY="$ROOT/.venv/bin/python"
 WORKER_NAME="${WORKER_NAME:-subtitulos}"
 BACKEND_PORT=8765
-MAX_UPLOAD_MB=500
+MAX_UPLOAD_MB=1024
 export CLOUDFLARE_ACCOUNT_ID="191c2077c2aed814603696b1fea5a14b"
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 

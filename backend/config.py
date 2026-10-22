@@ -1,7 +1,7 @@
 """Configuración de despliegue. Es el único módulo que lee variables SUBS_* del entorno.
 
 SUBS_DATA_DIR (data/): carpeta de jobs, base SQLite y subs.lock. Una ruta relativa cuelga de la raíz.
-SUBS_MAX_UPLOAD_MB (500): tamaño máximo de subida, en MB. Entero mayor que 0.
+SUBS_MAX_UPLOAD_MB (1024): tamaño máximo de subida, en MB. Entero mayor que 0.
 SUBS_CHUNK_MB (8): tamaño de cada trozo de la subida por partes, en MB. Entero de 1 a 90.
 SUBS_DEFAULT_MODEL (small): modelo de Whisper si el formulario no pide otro.
 SUBS_MAX_PREVIEW_SECONDS (15): duración máxima del preview, en segundos. El mínimo es 1.
@@ -20,7 +20,7 @@ from urllib.parse import urlsplit
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
-DEFAULT_MAX_UPLOAD_MB = 500
+DEFAULT_MAX_UPLOAD_MB = 1024
 DEFAULT_CHUNK_MB = 8  # 8 MB tardan unos 28 s a 0,29 MB/s, por debajo de los 100 s de Cloudflare
 MAX_CHUNK_MB = 90  # Tope de configuración: a 0,29 MB/s, un trozo de más de unos 29 MB ya supera los 100 s
 DEFAULT_MODEL = "small"

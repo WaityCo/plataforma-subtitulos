@@ -59,7 +59,7 @@ En macOS, el script avisa si falta `ffmpeg-full`. La API arranca igual, pero sin
 
 ### Flujo en el editor
 
-1. **Subir.** Elige un video mp4, mov o webm (hasta `SUBS_MAX_UPLOAD_MB`, 500 MB por defecto) y el idioma: automático, español o inglés. El archivo viaja por partes; ver [Subidas por partes](#subidas-por-partes).
+1. **Subir.** Elige un video mp4, mov o webm (hasta `SUBS_MAX_UPLOAD_MB`, 1 GB (1024 MB) por defecto) y el idioma: automático, español o inglés. El archivo viaja por partes; ver [Subidas por partes](#subidas-por-partes).
 2. **Transcribir.** El job pasa por `transcribing` hasta `ready`. Mientras tanto, las ediciones responden 409.
 3. **Preset.** La tarjeta *Preset* elige el estilo, y *Comparar presets* compara varios. La vista en vivo pide `GET /api/jobs/{id}/segments` con el estilo candidato, sin guardarlo. El estilo se guarda con `PUT /style` tras una pausa corta.
 4. **Gancho.** La tarjeta *Gancho de apertura* añade el titular de los primeros segundos (ver abajo).
@@ -291,7 +291,7 @@ tail -f ~/Services/clickflow-subs-data/logs/tunnel.log
 
 ### Límites
 
-- **Subida: 500 MB por archivo, en partes de 8 MB.** Cloudflare corta a los 100 s las peticiones que no terminan. El Worker reenvía cada parte en streaming, sin leerla entera. Las subidas grandes van por partes: ver [Subidas por partes](#subidas-por-partes).
+- **Subida: 1 GB (1024 MB) por archivo, en partes de 8 MB.** Cloudflare corta a los 100 s las peticiones que no terminan. El Worker reenvía cada parte en streaming, sin leerla entera. Las subidas grandes van por partes: ver [Subidas por partes](#subidas-por-partes).
 - **El Mac tiene que estar encendido y con red.** `caffeinate -s` solo impide la suspensión con corriente: con la tapa cerrada y sin pantalla externa, el Mac se duerme.
 - **Arranque tras un reinicio.** Los agentes arrancan al iniciar sesión. Con FileVault, tras reiniciar hay que introducir la contraseña, y el sitio no vuelve hasta entonces.
 - **Comandos de energía recomendados.** Los ejecuta el dueño, porque piden sudo: `sudo pmset -c sleep 0 disksleep 0` (no dormir con corriente) y `sudo pmset autorestart 1` (encender tras un corte de corriente).
