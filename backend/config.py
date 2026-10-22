@@ -4,7 +4,10 @@ SUBS_DATA_DIR (data/): carpeta de jobs, base SQLite y subs.lock. Una ruta relati
 SUBS_MAX_UPLOAD_MB (1024): tamaño máximo de subida, en MB. Entero mayor que 0.
 SUBS_CHUNK_MB (8): tamaño de cada trozo de la subida por partes, en MB. Entero de 1 a 90. Desde el Mac, 64 MB.
 SUBS_UPLOAD_CONCURRENCY (3): trozos que se envían a la vez desde fuera del Mac. Entero de 1 a 8. Desde el Mac, uno.
-SUBS_DEFAULT_MODEL (small): modelo de Whisper si el formulario no pide otro.
+SUBS_ASR_MODEL (small): modelo de Whisper de los jobs y de la API por defecto. Gana sobre SUBS_DEFAULT_MODEL.
+SUBS_DEFAULT_MODEL (small): alias de SUBS_ASR_MODEL, solo si esta no está definida.
+SUBS_ASR_ENGINE (faster-whisper): faster-whisper o mlx. Con mlx, mlx_whisper tiene que importarse al arrancar.
+SUBS_VIDEO_ENCODER (auto): auto, videotoolbox o libx264.
 SUBS_MAX_PREVIEW_SECONDS (15): duración máxima del preview, en segundos. El mínimo es 1.
 SUBS_DEFAULT_PRESET (ken_remedie si el motor lo tiene; si no, ken_classic): preset si el formulario no pide otro.
 SUBS_CORS_ORIGINS (vacío): orígenes que pueden llamar a la API desde otro dominio, separados por comas. Vacío: solo mismo origen.
@@ -13,12 +16,16 @@ SUBS_API_KEY (vacío): si se define, /api/* y /fonts/* exigen la cabecera X-Subs
 Una variable vacía equivale a no definirla. Un valor no válido detiene el arranque.
 """
 
+import importlib
+import logging
 import math
 import os
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
+
+logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
@@ -32,7 +39,12 @@ DEFAULT_MAX_PREVIEW_SECONDS = 15
 MIN_PREVIEW_SECONDS = 1
 PREFERRED_PRESET = "ken_remedie"
 FALLBACK_PRESET = "ken_classic"
-MODEL_SIZES = frozenset({"tiny", "base", "small", "medium", "large-v2", "large-v3"})
+ASR_ENGINES = ("faster-whisper", "mlx")  # las mismas que ENGINES en engine/transcribe.py
+DEFAULT_ASR_ENGINE = "faster-whisper"
+ASR_MODELS = ("tiny", "base", "small", "medium", "large-v2", "large-v3", "large-v3-turbo")  # las de MLX_MODELS
+MODEL_SIZES = frozenset(ASR_MODELS)
+VIDEO_ENCODERS = ("auto", "videotoolbox", "libx264")  # las mismas que VIDEO_ENCODERS en engine/burn.py
+DEFAULT_VIDEO_ENCODER = "auto"
 MB = 1024 * 1024
 LOCAL_CHUNK_BYTES = 64 * MB  # desde el Mac no pasa por Cloudflare: trozos grandes y menos peticiones
 
@@ -47,7 +59,7 @@ class Settings:
 
     data_dir: Path = DEFAULT_DATA_DIR
     max_upload_bytes: int = DEFAULT_MAX_UPLOAD_MB * MB
-    default_model: str = DEFAULT_MODEL
+    default_model: str = DEFAULT_MODEL  # modelo de los jobs y de la API: SUBS_ASR_MODEL, o SUBS_DEFAULT_MODEL
     max_preview_seconds: float = DEFAULT_MAX_PREVIEW_SECONDS
     default_preset: str | None = None  # None: se resuelve con resolve_default_preset
     cors_origins: tuple[str, ...] = ()  # vacío: solo mismo origen
@@ -55,6 +67,8 @@ class Settings:
     chunk_bytes: int = DEFAULT_CHUNK_MB * MB  # tamaño de cada trozo de la subida por partes
     upload_concurrency: int = DEFAULT_UPLOAD_CONCURRENCY  # trozos a la vez desde fuera del Mac
     public_origins: tuple[str, ...] = ()  # sitio público que puede consultar /api/local-ping
+    asr_engine: str = DEFAULT_ASR_ENGINE  # SUBS_ASR_ENGINE
+    video_encoder: str = DEFAULT_VIDEO_ENCODER  # SUBS_VIDEO_ENCODER
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> "Settings":
@@ -62,7 +76,7 @@ class Settings:
         return cls(
             data_dir=_data_dir(env.get("SUBS_DATA_DIR")),
             max_upload_bytes=_upload_mb(env.get("SUBS_MAX_UPLOAD_MB")) * MB,
-            default_model=_model(env.get("SUBS_DEFAULT_MODEL")),
+            default_model=_modelo_por_defecto(env),
             max_preview_seconds=_preview_seconds(env.get("SUBS_MAX_PREVIEW_SECONDS")),
             default_preset=_value(env.get("SUBS_DEFAULT_PRESET")),
             cors_origins=_origenes(env.get("SUBS_CORS_ORIGINS"), "SUBS_CORS_ORIGINS"),
@@ -70,6 +84,9 @@ class Settings:
             chunk_bytes=_chunk_mb(env.get("SUBS_CHUNK_MB")) * MB,
             upload_concurrency=_concurrency(env.get("SUBS_UPLOAD_CONCURRENCY")),
             public_origins=_origenes(env.get("SUBS_PUBLIC_ORIGINS"), "SUBS_PUBLIC_ORIGINS"),
+            asr_engine=_opcion(env.get("SUBS_ASR_ENGINE"), "SUBS_ASR_ENGINE", ASR_ENGINES) or DEFAULT_ASR_ENGINE,
+            video_encoder=_opcion(env.get("SUBS_VIDEO_ENCODER"), "SUBS_VIDEO_ENCODER", VIDEO_ENCODERS)
+            or DEFAULT_VIDEO_ENCODER,
         )
 
 
@@ -85,6 +102,23 @@ def resolve_default_preset(explicit: str | None, available: Iterable[str]) -> st
         options = ", ".join(ids)
         raise ConfigError(f"SUBS_DEFAULT_PRESET no existe entre los presets del motor: {explicit!r}. Disponibles: {options}.")
     return explicit
+
+
+def comprobar_motor_asr(settings: Settings) -> None:
+    """Con SUBS_ASR_ENGINE=mlx, mlx_whisper debe importarse. Si no, el arranque se detiene nombrando la variable."""
+    if settings.asr_engine != "mlx":
+        return
+    try:
+        _importar_mlx()
+    except Exception as exc:  # ImportError, o un fallo al cargar la librería de Metal
+        raise ConfigError(
+            f"SUBS_ASR_ENGINE=mlx necesita mlx_whisper, y no se puede importar: {exc}. "
+            "Instálalo en el venv (pip install mlx-whisper) o usa SUBS_ASR_ENGINE=faster-whisper."
+        ) from exc
+
+
+def _importar_mlx() -> None:
+    importlib.import_module("mlx_whisper")  # aparte para que las pruebas la sustituyan
 
 
 def _value(raw: str | None) -> str | None:
@@ -142,13 +176,27 @@ def _concurrency(raw: str | None) -> int:
     return number
 
 
-def _model(raw: str | None) -> str:
+def _modelo_por_defecto(env: Mapping[str, str]) -> str:
+    """Modelo de los jobs y de la API. SUBS_ASR_MODEL gana; SUBS_DEFAULT_MODEL queda como alias de ella."""
+    asr = _opcion(env.get("SUBS_ASR_MODEL"), "SUBS_ASR_MODEL", ASR_MODELS)
+    alias = _opcion(env.get("SUBS_DEFAULT_MODEL"), "SUBS_DEFAULT_MODEL", ASR_MODELS)
+    if asr and alias and asr != alias:
+        logger.warning(
+            "SUBS_ASR_MODEL=%s y SUBS_DEFAULT_MODEL=%s no coinciden: se usa %s. SUBS_DEFAULT_MODEL es un alias.",
+            asr,
+            alias,
+            asr,
+        )
+    return asr or alias or DEFAULT_MODEL
+
+
+def _opcion(raw: str | None, variable: str, options: tuple[str, ...]) -> str | None:
+    """Valor de una lista cerrada, o None si no está definida. Fuera de la lista, el arranque se detiene."""
     value = _value(raw)
     if value is None:
-        return DEFAULT_MODEL
-    if value not in MODEL_SIZES:
-        options = ", ".join(sorted(MODEL_SIZES))
-        raise ConfigError(f"SUBS_DEFAULT_MODEL no admitido: {value!r}. Usa uno de: {options}.")
+        return None
+    if value not in options:
+        raise ConfigError(f"{variable} no admitido: {value!r}. Usa uno de: {', '.join(options)}.")
     return value
 
 

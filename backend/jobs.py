@@ -366,6 +366,7 @@ class JobManager:
         lock_stale_after: float = STALE_AFTER_SECONDS,
         takeover_seconds: float = TAKEOVER_SECONDS,
         heartbeat_seconds: float = HEARTBEAT_SECONDS,
+        on_owner: Callable[[], None] | None = None,
     ) -> None:
         self.settings = settings
         self.data_dir = settings.data_dir
@@ -376,6 +377,7 @@ class JobManager:
         self.takeover_seconds = takeover_seconds
         self.heartbeat_seconds = heartbeat_seconds
         self.owner = False
+        self._on_owner = on_owner  # se llama al tomar el worker: al arrancar o tras un relevo
         self._lock = threading.RLock()  # serializa cambios de estado y escrituras del ASS
         self._wake = threading.Event()
         self._stop = threading.Event()  # cierre del proceso
@@ -439,7 +441,17 @@ class JobManager:
         self._heartbeat.start()
         self._wake.set()
         logger.info("Este proceso es el dueño de %s: worker en marcha.", self.data_dir)
+        self._avisar_dueno()
         return True
+
+    def _avisar_dueno(self) -> None:
+        """Avisa de que este proceso ejecuta los jobs, p. ej. para precargar el modelo. Un fallo no para el worker."""
+        if self._on_owner is None:
+            return
+        try:
+            self._on_owner()
+        except Exception:
+            logger.warning("El aviso de dueño falló; el worker sigue en marcha.", exc_info=True)
 
     def _standby_loop(self) -> None:
         """Sin lock, reintenta tomarlo cada takeover_seconds. Con lock, no hace nada hasta que lo pierda."""

@@ -1,10 +1,24 @@
 """Variables SUBS_* de despliegue: valores por defecto, sobrescritura, validación y efecto en la API."""
 
+import logging
+from dataclasses import replace
+
 import pytest
 from fastapi.testclient import TestClient
 
 from backend.app import create_app
-from backend.config import MB, PROJECT_ROOT, ConfigError, Settings, resolve_default_preset
+from backend.config import (
+    ASR_ENGINES,
+    ASR_MODELS,
+    MB,
+    MODEL_SIZES,
+    PROJECT_ROOT,
+    VIDEO_ENCODERS,
+    ConfigError,
+    Settings,
+    comprobar_motor_asr,
+    resolve_default_preset,
+)
 from backend.tests import fakes
 from backend.tests.fakes import FakeEngine
 from backend.tests.helpers import upload, wait_for
@@ -17,6 +31,8 @@ def test_valores_por_defecto():
     assert settings.max_upload_bytes == 1024 * MB
     assert settings.chunk_bytes == 8 * MB
     assert settings.default_model == "small"
+    assert settings.asr_engine == "faster-whisper"
+    assert settings.video_encoder == "auto"
     assert settings.max_preview_seconds == 15
     assert settings.default_preset is None  # automático: ken_remedie si existe, si no ken_classic
 
@@ -51,7 +67,15 @@ def test_ruta_relativa_cuelga_de_la_raiz_del_proyecto():
 
 
 def test_valor_vacio_equivale_a_no_definir_la_variable():
-    vacias = {"SUBS_MAX_UPLOAD_MB": "  ", "SUBS_DEFAULT_MODEL": "", "SUBS_DATA_DIR": "", "SUBS_DEFAULT_PRESET": " "}
+    vacias = {
+        "SUBS_MAX_UPLOAD_MB": "  ",
+        "SUBS_DEFAULT_MODEL": "",
+        "SUBS_ASR_MODEL": "",
+        "SUBS_ASR_ENGINE": " ",
+        "SUBS_VIDEO_ENCODER": "",
+        "SUBS_DATA_DIR": "",
+        "SUBS_DEFAULT_PRESET": " ",
+    }
 
     assert Settings.from_env(vacias) == Settings.from_env({})
 
@@ -63,6 +87,9 @@ def test_valor_vacio_equivale_a_no_definir_la_variable():
         ("SUBS_MAX_UPLOAD_MB", "mucho"),
         ("SUBS_MAX_UPLOAD_MB", "1.5"),
         ("SUBS_DEFAULT_MODEL", "gigante"),
+        ("SUBS_ASR_MODEL", "gigante"),
+        ("SUBS_ASR_ENGINE", "whisper-cpp"),
+        ("SUBS_VIDEO_ENCODER", "nvenc"),
         ("SUBS_MAX_PREVIEW_SECONDS", "0.5"),
         ("SUBS_MAX_PREVIEW_SECONDS", "nan"),
         ("SUBS_CHUNK_MB", "0"),
@@ -173,3 +200,85 @@ def test_cors_origins_no_validos_detienen_el_arranque(raw):
 def test_api_key_vacia_no_pide_clave_y_los_espacios_se_quitan():
     assert Settings.from_env({"SUBS_API_KEY": "  "}).api_key is None
     assert Settings.from_env({"SUBS_API_KEY": " secreto "}).api_key == "secreto"
+
+
+@pytest.mark.parametrize(
+    "entorno, esperado",
+    [
+        ({"SUBS_DEFAULT_MODEL": "medium"}, "medium"),
+        ({"SUBS_ASR_MODEL": "tiny"}, "tiny"),
+        ({"SUBS_ASR_MODEL": "large-v3-turbo", "SUBS_DEFAULT_MODEL": "large-v3-turbo"}, "large-v3-turbo"),
+    ],
+)
+def test_el_modelo_por_defecto_sale_de_la_variable_definida(entorno, esperado):
+    assert Settings.from_env(entorno).default_model == esperado
+
+
+def test_asr_model_gana_sobre_el_alias_y_el_arranque_avisa(caplog):
+    with caplog.at_level(logging.WARNING):
+        settings = Settings.from_env({"SUBS_ASR_MODEL": "large-v3-turbo", "SUBS_DEFAULT_MODEL": "tiny"})
+
+    assert settings.default_model == "large-v3-turbo"
+    assert any("SUBS_DEFAULT_MODEL es un alias" in registro.getMessage() for registro in caplog.records)
+
+
+def test_un_alias_no_valido_detiene_el_arranque_aunque_asr_model_sea_correcta():
+    with pytest.raises(ConfigError, match="SUBS_DEFAULT_MODEL"):
+        Settings.from_env({"SUBS_ASR_MODEL": "small", "SUBS_DEFAULT_MODEL": "gigante"})
+
+
+def test_motor_y_codificador_se_leen_sin_comprobar_mlx():
+    settings = Settings.from_env({"SUBS_ASR_ENGINE": "mlx", "SUBS_VIDEO_ENCODER": "libx264"})
+
+    assert (settings.asr_engine, settings.video_encoder) == ("mlx", "libx264")
+
+
+def test_las_listas_del_backend_coinciden_con_las_del_motor():
+    from engine.burn import VIDEO_ENCODERS as CODIFICADORES_MOTOR
+    from engine.transcribe import ENGINES, MLX_MODELS
+
+    assert ASR_ENGINES == ENGINES
+    assert set(ASR_MODELS) == set(MLX_MODELS)
+    assert VIDEO_ENCODERS == CODIFICADORES_MOTOR
+    assert "large-v3-turbo" in MODEL_SIZES
+
+
+def test_con_mlx_sin_mlx_whisper_el_arranque_se_detiene(monkeypatch):
+    def sin_libreria():
+        raise ImportError("No module named 'mlx_whisper'")
+
+    monkeypatch.setattr("backend.config._importar_mlx", sin_libreria)
+
+    with pytest.raises(ConfigError, match="SUBS_ASR_ENGINE"):
+        comprobar_motor_asr(Settings(asr_engine="mlx"))
+
+
+def test_con_mlx_y_la_libreria_disponible_no_hay_error(monkeypatch):
+    monkeypatch.setattr("backend.config._importar_mlx", lambda: None)
+
+    comprobar_motor_asr(Settings(asr_engine="mlx"))
+
+
+def test_con_faster_whisper_no_se_importa_mlx(monkeypatch):
+    def no_debe_llamarse():
+        raise AssertionError("con faster-whisper no se importa mlx_whisper")
+
+    monkeypatch.setattr("backend.config._importar_mlx", no_debe_llamarse)
+
+    comprobar_motor_asr(Settings())
+
+
+def test_crear_la_app_con_mlx_sin_libreria_no_arranca(monkeypatch, tmp_path):
+    def sin_libreria():
+        raise ImportError("No module named 'mlx_whisper'")
+
+    monkeypatch.setattr("backend.config._importar_mlx", sin_libreria)
+    settings = replace(Settings(data_dir=tmp_path / "datos"), asr_engine="mlx")
+
+    with pytest.raises(ConfigError, match="SUBS_ASR_ENGINE"):
+        create_app(
+            settings=settings,
+            engine=FakeEngine(),
+            frontend_dir=tmp_path / "sin-frontend",
+            presets_dir=tmp_path / "sin-presets",
+        )

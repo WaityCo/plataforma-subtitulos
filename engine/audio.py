@@ -46,6 +46,16 @@ def probe_video(video_path):
     return {"width": width, "height": height, "duration": duration}
 
 
+def audio_codec(video_path):
+    """Códec del primer stream de audio ("aac", "opus"...), o None si el archivo no tiene audio."""
+    cmd = [ffprobe_bin(), "-v", "error", "-select_streams", "a:0", "-show_entries", "stream=codec_name",
+           "-of", "csv=p=0", str(video_path)]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"ffprobe no pudo leer el video: {result.stderr.strip()}")
+    return result.stdout.strip() or None
+
+
 def _rotation(stream):
     # FFmpeg gira el frame al decodificar; el lienzo ASS debe usar el tamaño ya girado.
     for side_data in stream.get("side_data_list", []):

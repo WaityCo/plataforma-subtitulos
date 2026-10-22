@@ -22,12 +22,21 @@ from starlette.formparsers import MultiPartException, MultiPartParser
 
 from . import __version__, thumbs
 from .acceso import ClaveDeAcceso, PingLocal, es_local
-from .config import LOCAL_CHUNK_BYTES, MB, MIN_PREVIEW_SECONDS, MODEL_SIZES, PROJECT_ROOT, Settings, resolve_default_preset
+from .config import (
+    LOCAL_CHUNK_BYTES,
+    MB,
+    MIN_PREVIEW_SECONDS,
+    MODEL_SIZES,
+    PROJECT_ROOT,
+    Settings,
+    comprobar_motor_asr,
+    resolve_default_preset,
+)
 from .engine_bridge import FONTS_DIR, EngineUnavailable, RealEngine
 from .jobs import ASS_FILE, OUTPUT_FILE, PREVIEW_FILE, JobError, JobManager, comprobar_espacio, error_de_espacio
 from .media import UPLOAD_TYPES, InvalidVideo, probe_video, validate_upload
 from .uploads import UploadManager, UploadNotFound
-from .warmup import start_warmup
+from .warmup import precargar_modelo, start_warmup
 
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 PRESETS_DIR = PROJECT_ROOT / "presets"
@@ -544,7 +553,13 @@ def create_app(
     """Crea la app. Sin settings, la configuración sale de las variables SUBS_* del entorno."""
     _configurar_log()
     settings = Settings.from_env() if settings is None else settings
-    manager = JobManager(settings, RealEngine() if engine is None else engine)
+    comprobar_motor_asr(settings)  # con mlx sin mlx_whisper, el arranque se detiene aquí
+    # El modelo de transcripción lo carga el proceso que ejecuta los jobs: al arrancar o al tomar el worker.
+    manager = JobManager(
+        settings,
+        RealEngine() if engine is None else engine,
+        on_owner=lambda: precargar_modelo(settings.default_model),
+    )
     uploads = UploadManager(settings.data_dir, settings)
     # Se resuelve al crear la app: si SUBS_DEFAULT_PRESET no existe entre los presets, el arranque se detiene.
     default_preset = resolve_default_preset(settings.default_preset, [p["id"] for p in manager.list_presets()])
@@ -553,7 +568,7 @@ def create_app(
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         manager.start()
         uploads.start()  # limpia las subidas caducadas y sigue cada hora
-        start_warmup()  # el motor de texto y el gancho se precalientan en segundo plano, sin retrasar el arranque
+        start_warmup()  # el texto y el gancho se precalientan en segundo plano, sin retrasar el arranque
         try:
             yield
         finally:

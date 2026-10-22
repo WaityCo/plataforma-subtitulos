@@ -1,6 +1,9 @@
 """Precalentamiento en segundo plano. El primer fotograma de cada preset tarda porque el motor carga las métricas de
 su fuente, y el primer gancho carga Pillow y la fuente de emoji. Un hilo lo hace al arrancar: la API responde de
-inmediato y, cuando termina, los primeros fotogramas ya no pagan esa carga."""
+inmediato y, cuando termina, los primeros fotogramas ya no pagan esa carga.
+
+El modelo de transcripción lo carga solo el proceso que ejecuta los jobs (el dueño del worker): al arrancar, o al
+tomar el worker tras un relevo. Los demás procesos de la API no lo cargan."""
 
 import logging
 import string
@@ -46,5 +49,27 @@ def warm_up() -> None:
 def start_warmup() -> threading.Thread:
     """Arranca el precalentamiento en un hilo en segundo plano, sin retrasar el arranque de la API."""
     thread = threading.Thread(target=warm_up, name="subs-warmup", daemon=True)
+    thread.start()
+    return thread
+
+
+def _warm_transcription(model_size: str | None) -> None:
+    """Carga el modelo de transcripción, el mismo que usará el primer job. Lanza si el motor no está."""
+    from engine import transcribe
+
+    transcribe.warmup(model_size)
+
+
+def cargar_modelo(model_size: str | None) -> None:
+    """Carga el modelo de transcripción. Si falla, solo queda el aviso: el primer job lo cargará entonces."""
+    try:
+        _warm_transcription(model_size)
+    except Exception:
+        logger.warning("No se pudo precargar el modelo de transcripción; el primer job lo cargará.", exc_info=True)
+
+
+def precargar_modelo(model_size: str | None) -> threading.Thread:
+    """Carga el modelo en un hilo en segundo plano. Solo lo pide el proceso que ejecuta los jobs."""
+    thread = threading.Thread(target=cargar_modelo, args=(model_size,), name="subs-model-warmup", daemon=True)
     thread.start()
     return thread

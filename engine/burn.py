@@ -1,5 +1,7 @@
 """Quemado de subtítulos con libass en FFmpeg, progreso, fuentes del job y overlays del gancho."""
 
+import os
+import platform
 import re
 import shutil
 import subprocess
@@ -7,7 +9,7 @@ import tempfile
 from functools import lru_cache
 from pathlib import Path
 
-from engine.audio import probe_video
+from engine.audio import audio_codec, probe_video
 from engine.ffbin import ffmpeg_bin
 from engine.textmetrics import FONT_SUFFIXES
 
@@ -74,8 +76,11 @@ def burn(input_video, ass_text, output_path, fonts_dir, preview_seconds=None, pr
         (workdir / "subtitles.ass").write_text(ass_text, encoding="utf-8")
         fonts_for_burn(fonts_dir, workdir / "fonts")
         copied = _copy_overlays(overlays, workdir)
-        total = float(preview_seconds) if preview_seconds is not None else probe_video(source)["duration"]
-        _run(_command(source, output, preview_seconds, copied, total), workdir, output, total, report)
+        info = probe_video(source)
+        total = float(preview_seconds) if preview_seconds is not None else info["duration"]
+        video = video_args(info["width"], info["height"], preview_seconds is not None)
+        cmd = _command(source, output, preview_seconds, copied, total, video=video, audio=audio_args(source))
+        _run(cmd, workdir, output, total, report)
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
 
@@ -101,29 +106,75 @@ def _filter_graph(overlays):
     return ";".join(parts), label
 
 
-def _command(source, output, preview_seconds, overlays=(), duration=None):
+# Codificación del render. VideoToolbox a 6 Mbps (1080x1920, escalado por área) dio VMAF 94,9 frente al libx264
+# medium crf 18 de referencia, y tarda unos 9 s en lugar de 40 (medida de P1).
+VIDEO_ENCODERS = ("auto", "videotoolbox", "libx264")
+VT_KBPS_FINAL = 6000
+VT_KBPS_PREVIEW = 3000
+REFERENCE_AREA = 1080 * 1920
+LIBX264_FINAL = ["-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p"]
+LIBX264_FAST = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p"]
+LIBX264_PREVIEW = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p"]
+AAC_ARGS = ["-c:a", "aac", "-b:a", "192k"]
+
+
+def configured_encoder():
+    """Codificador de SUBS_VIDEO_ENCODER (auto por defecto). Un valor no admitido lanza ValueError."""
+    value = os.environ.get("SUBS_VIDEO_ENCODER", "").strip() or "auto"
+    if value not in VIDEO_ENCODERS:
+        raise ValueError(f"SUBS_VIDEO_ENCODER no admitido: {value!r}. Usa uno de: {', '.join(VIDEO_ENCODERS)}.")
+    return value
+
+
+@lru_cache(maxsize=1)
+def _has_videotoolbox():
+    """True si el ffmpeg resuelto trae el codificador h264_videotoolbox. El resultado se guarda en caché."""
+    try:
+        result = subprocess.run([ffmpeg_bin(), "-hide_banner", "-encoders"], capture_output=True, text=True)
+    except FileNotFoundError:
+        return False
+    return result.returncode == 0 and "h264_videotoolbox" in result.stdout
+
+
+def video_args(width, height, preview):
+    """Argumentos de vídeo del render final o del preview. VideoToolbox escala el bitrate por área."""
+    choice = configured_encoder()
+    if choice == "videotoolbox" and not _has_videotoolbox():
+        raise RuntimeError("SUBS_VIDEO_ENCODER=videotoolbox, pero el ffmpeg resuelto no trae h264_videotoolbox.")
+    wants_videotoolbox = choice == "videotoolbox" or (choice == "auto" and platform.system() == "Darwin")
+    if wants_videotoolbox and _has_videotoolbox():
+        kbps = VT_KBPS_PREVIEW if preview else VT_KBPS_FINAL
+        scaled = max(1, round(kbps * width * height / REFERENCE_AREA))
+        return ["-c:v", "h264_videotoolbox", "-b:v", f"{scaled}k", "-profile:v", "high", "-pix_fmt", "yuv420p"]
+    if preview:
+        return list(LIBX264_PREVIEW)
+    return list(LIBX264_FINAL if choice == "libx264" else LIBX264_FAST)
+
+
+def audio_args(source):
+    """Copia el audio si ya es AAC, sin recodificarlo. Si no, lo codifica en AAC 192k."""
+    return ["-c:a", "copy"] if audio_codec(source) == "aac" else list(AAC_ARGS)
+
+
+def _command(source, output, preview_seconds, overlays=(), duration=None, video=None, audio=None):
     cmd = [ffmpeg_bin(), "-hide_banner", "-nostdin", "-y", "-progress", "pipe:1", "-nostats", "-i", str(source)]
     for name, _start, _end, _x, _y in overlays:
         cmd += ["-loop", "1", "-i", name]
     if preview_seconds is not None:
-        cmd += ["-t", f"{preview_seconds:g}", "-preset", "veryfast", "-crf", "23"]
-    else:
-        cmd += ["-preset", "medium", "-crf", "18"]
-        if overlays and duration:
-            # Los PNG en bucle no terminan nunca: la salida se corta con la duración del video.
-            cmd += ["-t", f"{duration:g}"]
+        cmd += ["-t", f"{preview_seconds:g}"]
+    elif overlays and duration:
+        # Los PNG en bucle no terminan nunca: la salida se corta con la duración del video.
+        cmd += ["-t", f"{duration:g}"]
     if overlays:
         graph, label = _filter_graph(overlays)
         cmd += ["-filter_complex", graph, "-map", f"[{label}]"]
     else:
         cmd += ["-vf", "ass=subtitles.ass:fontsdir=fonts", "-map", "0:v:0"]
-    cmd += [
-        "-map", "0:a?",
-        "-c:v", "libx264", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "192k",
-        "-movflags", "+faststart",
-        str(output),
-    ]
+    if video is None:
+        video = LIBX264_PREVIEW if preview_seconds is not None else LIBX264_FINAL
+    if audio is None:
+        audio = AAC_ARGS
+    cmd += ["-map", "0:a?", *video, *audio, "-threads", "0", "-movflags", "+faststart", str(output)]
     return cmd
 
 

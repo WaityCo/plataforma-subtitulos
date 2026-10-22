@@ -18,7 +18,7 @@ python3.12 -m venv .venv
 .venv/bin/pip install -r requirements.txt -r backend/requirements.txt
 ```
 
-`requirements.txt` cubre el motor: transcripción, Pillow para el gancho, fonttools y uharfbuzz para las medidas de texto, y pytest. `backend/requirements.txt` cubre la API.
+`requirements.txt` cubre el motor: transcripción, Pillow para el gancho, fonttools y uharfbuzz para las medidas de texto, y pytest. `mlx-whisper` no está en `requirements.txt`. Para usar `SUBS_ASR_ENGINE=mlx` en un Mac con Apple Silicon, instálalo a mano dentro del venv: `.venv/bin/pip install mlx-whisper==0.4.3`. Trae torch, numba y scipy, unos 0.5 GB. `backend/requirements.txt` cubre la API.
 
 Las instancias estáticas de Montserrat e Inter ya están en `assets/fonts/`. `python -m engine.static_fonts` las regenera desde sus archivos variables (Montserrat-Bold, Montserrat-ExtraBold, Montserrat-Medium e Inter-SemiBold). Solo hace falta si faltan o si cambias una variable.
 
@@ -32,16 +32,19 @@ Los valores llegan por variables de entorno. Una variable vacía equivale a no d
 | `SUBS_MAX_UPLOAD_MB` | `500` | `backend/config.py` | Tamaño máximo de un video, en MB. Entero mayor que 0. Los videos se suben por trozos, así que este tamaño no depende del límite por petición de Cloudflare. |
 | `SUBS_CHUNK_MB` | `8` | `backend/config.py` | Tamaño de cada trozo de la subida por partes, en MB. Entero de 1 a 90. Cloudflare corta a los 100 s las peticiones que no terminan: con el túnel a unos 0,29 MB/s, 8 MB tardan unos 28 s. Desde el Mac se usan trozos de 64 MB (ver [Modo local](#modo-local)). |
 | `SUBS_UPLOAD_CONCURRENCY` | `3` | `backend/config.py` | Trozos que se envían a la vez desde fuera del Mac, de 1 a 8. Desde el Mac se envía uno. |
-| `SUBS_DEFAULT_MODEL` | `small` | `backend/config.py` | Modelo de Whisper si el formulario no pide `model_size`: `tiny`, `base`, `small`, `medium`, `large-v2` o `large-v3`. |
+| `SUBS_DEFAULT_MODEL` | `small` | `backend/config.py` | Alias de `SUBS_ASR_MODEL`: solo cuenta si esa no está definida. Si las dos difieren, gana `SUBS_ASR_MODEL` y el arranque lo avisa en el log. Valores: `tiny`, `base`, `small`, `medium`, `large-v2`, `large-v3` o `large-v3-turbo`. |
 | `SUBS_MAX_PREVIEW_SECONDS` | `15` | `backend/config.py` | Duración máxima del preview de render, en segundos. El mínimo es 1. |
 | `SUBS_DEFAULT_PRESET` | `ken_remedie` si el motor lo tiene; si no, `ken_classic` | `backend/config.py` | Preset si el formulario no pide `preset`. Con valor, debe existir entre los presets del motor. |
 | `SUBS_CORS_ORIGINS` | vacío: solo mismo origen | `backend/config.py` | Solo para desarrollo local: orígenes que pueden llamar a la API desde otro puerto o dominio, separados por comas (p. ej. `http://localhost:5173`). Con orígenes se permiten credenciales (cookies de Cloudflare Access). |
 | `SUBS_PUBLIC_ORIGINS` | vacío: sin banner de versión local | `backend/config.py` | Orígenes del sitio público que pueden consultar `/api/local-ping` desde el navegador, para ofrecer la versión local (ver [Modo local](#modo-local)). `deploy/cloudflare/run-backend.sh` la rellena con `state/public_url`. |
 | `SUBS_API_KEY` | vacío: la API no pide clave | `backend/acceso.py` | Si se define, toda petición a `/api/*` y `/fonts/*` debe llevar la cabecera `X-Subs-Key` con ese valor, o responde 401. Con clave, `/docs`, `/redoc` y `/openapi.json` no se sirven (404). La interfaz solo llega desde el Mac (ver [Modo local](#modo-local)): por el sitio público la sirve el Worker. |
+| `SUBS_ASR_ENGINE` | `faster-whisper` | `engine/transcribe.py` | Motor de transcripción. `faster-whisper` (CPU, con batching, 4 hilos y beam 1) o `mlx` (mlx-whisper en Metal, solo Apple Silicon, instalado a mano; ver Instalación). Se valida al arrancar: un valor no admitido detiene el arranque, y con `mlx` también si `mlx_whisper` no se puede importar. |
+| `SUBS_ASR_MODEL` | `small` | `backend/config.py` | Modelo de los jobs que no piden otro, y el de la API por defecto. Gana sobre `SUBS_DEFAULT_MODEL`. Valores: `tiny`, `base`, `small`, `medium`, `large-v2`, `large-v3` o `large-v3-turbo`. Se valida al arrancar. Lo precarga en segundo plano el proceso que ejecuta los jobs (el dueño del worker), también tras un relevo; los demás procesos de la API no lo cargan. |
+| `SUBS_VIDEO_ENCODER` | `auto` | `engine/burn.py` | Codificador del render. `auto`: VideoToolbox a 6 Mbps en Mac, y libx264 `veryfast` CRF 20 en otras plataformas. `videotoolbox` lo fuerza y falla si el ffmpeg no lo trae. `libx264` usa `medium` CRF 18. El bitrate de VideoToolbox se escala por área (1080x1920 es la referencia); los previews usan 3 Mbps en Mac. Se valida al arrancar: un valor no admitido detiene el arranque. |
 | `FFMPEG_BIN` | ffmpeg-full de Homebrew, o el PATH | `engine/ffbin.py` | Ruta del ffmpeg. |
 | `FFPROBE_BIN` | ffprobe de ffmpeg-full, o el PATH | `engine/ffbin.py` | Ruta del ffprobe. |
 
-La CLI del motor no lee estas variables. En la imagen, `HF_HOME=/opt/hf-cache` lo lee huggingface_hub para guardar los modelos.
+La CLI del motor (`python -m engine.cli`) lee `SUBS_ASR_*` y `SUBS_VIDEO_ENCODER`. La API también las valida al arrancar, y usa `SUBS_ASR_MODEL` como modelo por defecto. En la imagen, `HF_HOME=/opt/hf-cache` lo lee huggingface_hub para guardar los modelos.
 
 **Cloudflare.** En producción, el frontend y la API van por el mismo origen, a través de un proxy. Cloudflare Free rechaza los cuerpos de más de 100 MB y corta a los 100 s las peticiones que no terminan. Por eso los videos se suben en trozos de `SUBS_CHUNK_MB` (8 MB por defecto), cada uno en su propia petición (`POST /api/uploads`, `PUT /api/uploads/{id}/chunks/{n}`, `POST /api/uploads/{id}/complete` y `DELETE /api/uploads/{id}` para cancelar). La interfaz lee el límite real de `GET /api/config` (`max_upload_mb` y `max_upload_bytes`). Con `SUBS_API_KEY`, el proxy tiene que añadir `X-Subs-Key` también a las rutas `/fonts/*`. Con Cloudflare Access delante, cada subida, edición y render deja en el log del servidor, con el id del job, el correo de la cabecera `Cf-Access-Authenticated-User-Email`. Esa cabecera solo se registra: no autoriza nada.
 
@@ -141,7 +144,7 @@ curl -o frame.jpg "http://127.0.0.1:8765/api/jobs/<id>/preview-frame?preset=huaj
 
 `GET /api/jobs/{id}/segments` acepta los mismos `preset` y `overrides`. Devuelve los segmentos que dibujaría el editor, sin guardar nada.
 
-**Paridad entre preview y render final.** El fotograma se dibuja con el mismo ASS que el render (`build_ass`), las mismas fuentes (`fonts_for_burn`), el mismo FFmpeg con libass y el mismo gancho. Cambian el ancho (`w`), el formato JPEG y la codificación: el preview en MP4 usa `veryfast` con CRF 23, y el render final usa `medium` con CRF 18. No comparo el JPEG con el MP4 píxel a píxel. La igualdad viene de usar el mismo ASS y el mismo libass. `backend/tests/test_thumbs.py` comprueba que el subtítulo sale en su instante, y `test_hook_api.py` que el gancho llega al preview y al render, y `tests/test_layout_parity.py` compara la geometría predicha con fotogramas quemados.
+**Paridad entre preview y render final.** El fotograma se dibuja con el mismo ASS que el render (`build_ass`), las mismas fuentes (`fonts_for_burn`), el mismo FFmpeg con libass y el mismo gancho. Cambian el ancho (`w`), el formato JPEG y la codificación: el preview en MP4 usa VideoToolbox a 3 Mbps en Mac (o `veryfast` con CRF 23 fuera de Mac), y el render final usa VideoToolbox a 6 Mbps en Mac (ver `SUBS_VIDEO_ENCODER`). No comparo el JPEG con el MP4 píxel a píxel. La igualdad viene de usar el mismo ASS y el mismo libass. `backend/tests/test_thumbs.py` comprueba que el subtítulo sale en su instante, y `test_hook_api.py` que el gancho llega al preview y al render, y `tests/test_layout_parity.py` compara la geometría predicha con fotogramas quemados.
 
 ### CLI
 

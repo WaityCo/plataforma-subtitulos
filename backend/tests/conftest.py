@@ -8,9 +8,20 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from backend import warmup as precalentamiento
 from backend.app import create_app
 from backend.config import Settings
 from backend.tests.fakes import FakeEngine
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _sin_carga_del_modelo():
+    """Los arranques de la API en los tests no cargan Whisper: el precalentamiento del modelo queda en vacío.
+    test_warmup.py prueba esa carga por separado."""
+    original = precalentamiento._warm_transcription
+    precalentamiento._warm_transcription = lambda model_size=None: None
+    yield
+    precalentamiento._warm_transcription = original
 
 
 @pytest.fixture(scope="session")

@@ -15,7 +15,7 @@ FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 
 
 def run_job(video_path, job_dir, preset="ken_remedie", overrides=None, language=None,
-            model_size="small", preview_seconds=None, progress=None, burn=False, hook=None):
+            model_size=None, preview_seconds=None, progress=None, burn=False, hook=None):
     """Genera words.json y subtitles.ass en job_dir y, con burn=True, output.mp4 quemado.
 
     progress(stage, percent) recibe audio, transcribe, subtitles y burn. preview_seconds solo
